@@ -22,3 +22,12 @@ _testmain.go
 *.exe
 *.test
 *.prof
+
+# go build
+makina
+
+# sample/dummy data
+sample-tweet.json
+
+# autoenv
+.env
