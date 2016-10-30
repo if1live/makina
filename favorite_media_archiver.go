@@ -19,14 +19,14 @@ const (
 	savePath = "/archive-temp"
 )
 
-type FavoriteImageArchiver struct {
+type FavoriteMediaArchiver struct {
 	config *Config
 	client *dropy.Client
 }
 
-func NewFavoriteImageArchiver(config *Config) *FavoriteImageArchiver {
+func NewFavoriteMediaArchiver(config *Config) *FavoriteMediaArchiver {
 	client := config.CreateDropboxClient()
-	archiver := &FavoriteImageArchiver{
+	archiver := &FavoriteMediaArchiver{
 		config,
 		client,
 	}
@@ -40,10 +40,10 @@ func NewFavoriteImageArchiver(config *Config) *FavoriteImageArchiver {
 	return archiver
 }
 
-func (ar *FavoriteImageArchiver) OnTweet(tweet *anaconda.Tweet) {
+func (ar *FavoriteMediaArchiver) OnTweet(tweet *anaconda.Tweet) {
 }
 
-func (ar *FavoriteImageArchiver) OnUnfavorite(tweet *anaconda.EventTweet) {
+func (ar *FavoriteMediaArchiver) OnUnfavorite(tweet *anaconda.EventTweet) {
 }
 
 type MediaResponse struct {
@@ -51,8 +51,29 @@ type MediaResponse struct {
 	FileName string
 }
 
+func findURLFromVideo(media anaconda.EntityMedia) string {
+	maxBitrate := -1
+	selectedVariant := anaconda.Variant{}
+	for _, v := range media.VideoInfo.Variants {
+		if v.Bitrate > maxBitrate {
+			maxBitrate = v.Bitrate
+			selectedVariant = v
+		}
+	}
+	return selectedVariant.Url
+}
+
+func findURLFromPhoto(media anaconda.EntityMedia) string {
+	return media.Media_url
+}
+
 func fetchMediaCh(tweet *anaconda.Tweet, idx int, media anaconda.EntityMedia, resps chan<- *MediaResponse) {
-	url := media.Media_url
+	url := ""
+	if media.Type == "video" {
+		url = findURLFromVideo(media)
+	} else {
+		url = findURLFromPhoto(media)
+	}
 
 	num := idx + 1
 	ext := filepath.Ext(url)
@@ -67,7 +88,7 @@ func fetchMediaCh(tweet *anaconda.Tweet, idx int, media anaconda.EntityMedia, re
 	}
 }
 
-func (ar *FavoriteImageArchiver) OnFavorite(tweet *anaconda.EventTweet) {
+func (ar *FavoriteMediaArchiver) OnFavorite(tweet *anaconda.EventTweet) {
 	t := tweet.TargetObject
 	log.Printf("favorite : %s, %s\n", t.IdStr, t.Text)
 
@@ -80,7 +101,7 @@ func (ar *FavoriteImageArchiver) OnFavorite(tweet *anaconda.EventTweet) {
 	// 그래서 코루틴 만들어서 돌려도 특별한 문제 없다
 	mediaRespChannel := make(chan *MediaResponse, 4)
 	for idx, media := range t.ExtendedEntities.Media {
-		fetchMediaCh(t, idx, media, mediaRespChannel)
+		go fetchMediaCh(t, idx, media, mediaRespChannel)
 	}
 
 	mediaCount := len(t.ExtendedEntities.Media)
@@ -94,7 +115,7 @@ func (ar *FavoriteImageArchiver) OnFavorite(tweet *anaconda.EventTweet) {
 	log.Printf("Complete %s", t.IdStr)
 }
 
-func (ar *FavoriteImageArchiver) saveLocal(tweet *anaconda.Tweet, mediaRespList []*MediaResponse) {
+func (ar *FavoriteMediaArchiver) saveLocal(tweet *anaconda.Tweet, mediaRespList []*MediaResponse) {
 	jsonFilename := tweet.IdStr + ".json"
 	SaveTweetJsonFile(tweet, jsonFilename)
 	log.Printf("Save Tweet %s  ->%s", tweet.IdStr, jsonFilename)
@@ -110,7 +131,7 @@ func (ar *FavoriteImageArchiver) saveLocal(tweet *anaconda.Tweet, mediaRespList 
 	}
 }
 
-func (ar *FavoriteImageArchiver) saveDropbox(tweet *anaconda.Tweet, mediaRespList []*MediaResponse) {
+func (ar *FavoriteMediaArchiver) saveDropbox(tweet *anaconda.Tweet, mediaRespList []*MediaResponse) {
 	c := ar.client
 
 	// upload tweet metadata

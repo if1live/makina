@@ -35,8 +35,17 @@ type StreamingHandler interface {
 }
 
 func mainDefault(config *Config) {
+	go mainServer(config)
+	mainStreaming(config)
+}
+
+func mainServer(config *Config) {
+
+}
+
+func mainStreaming(config *Config) {
 	handlers := []StreamingHandler{
-		NewFavoriteImageArchiver(config),
+		NewFavoriteMediaArchiver(config),
 	}
 
 	api := config.NewDataSourceAuthConfig().CreateApi()
@@ -64,6 +73,8 @@ func mainDefault(config *Config) {
 				}
 			case "favorited_retweet":
 				log.Println("favorited_retweet : skip")
+			case "retweeted_retweet":
+				log.Println("retweeted_retweet : skip")
 			default:
 				log.Printf("unknown event(%T) : %v \n", x, evt)
 			}
