@@ -6,10 +6,9 @@ import (
 	"flag"
 	"net/http"
 	"os"
+	"path"
 
 	"log"
-
-	"path"
 
 	"github.com/ChimeraCoder/anaconda"
 )
@@ -89,6 +88,7 @@ func mainServer(config *Config) {
 func mainStreaming(config *Config) {
 	handlers := []StreamingHandler{
 		NewFavoriteMediaArchiver(config),
+		NewHitomiDetector(config),
 	}
 
 	ignorableEvents := []string{
