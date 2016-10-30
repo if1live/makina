@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	"path"
+
 	"github.com/ChimeraCoder/anaconda"
 	dropbox "github.com/tj/go-dropbox"
 	dropy "github.com/tj/go-dropy"
@@ -29,8 +31,11 @@ type Config struct {
 }
 
 func LoadConfig() *Config {
+	filename := "config.json"
+	filepath := path.Join(GetExecutablePath(), filename)
+
 	var config Config
-	data, errFile := ioutil.ReadFile("config.json")
+	data, errFile := ioutil.ReadFile(filepath)
 	check(errFile)
 	errJson := json.Unmarshal(data, &config)
 	check(errJson)

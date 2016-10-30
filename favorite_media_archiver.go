@@ -67,7 +67,7 @@ func findURLFromPhoto(media anaconda.EntityMedia) string {
 	return media.Media_url
 }
 
-func fetchMediaCh(tweet *anaconda.Tweet, idx int, media anaconda.EntityMedia, resps chan<- *MediaResponse) {
+func fetchMediaCh(tweet *anaconda.Tweet, idx int, totalMediaCount int, media anaconda.EntityMedia, resps chan<- *MediaResponse) {
 	url := ""
 	if media.Type == "video" {
 		url = findURLFromVideo(media)
@@ -75,9 +75,16 @@ func fetchMediaCh(tweet *anaconda.Tweet, idx int, media anaconda.EntityMedia, re
 		url = findURLFromPhoto(media)
 	}
 
-	num := idx + 1
-	ext := filepath.Ext(url)
-	filename := fmt.Sprintf("%s_%d%s", tweet.IdStr, num, ext)
+	// 트윗에 붙은 이미지가 여러개인 경우와 한개인 경우를 구분
+	filename := ""
+	if totalMediaCount == 1 {
+		ext := filepath.Ext(url)
+		filename = fmt.Sprintf("%s%s", tweet.IdStr, ext)
+	} else {
+		num := idx + 1
+		ext := filepath.Ext(url)
+		filename = fmt.Sprintf("%s_%d%s", tweet.IdStr, num, ext)
+	}
 
 	fetcher := HttpFetcher{}
 	resp := fetcher.Fetch(url)
@@ -97,14 +104,13 @@ func (ar *FavoriteMediaArchiver) OnFavorite(tweet *anaconda.EventTweet) {
 		return
 	}
 
-	// 로컬에 저장. 트윗당 이미지는 최대 4개로 제한된다
-	// 그래서 코루틴 만들어서 돌려도 특별한 문제 없다
-	mediaRespChannel := make(chan *MediaResponse, 4)
+	mediaCount := len(t.ExtendedEntities.Media)
+
+	mediaRespChannel := make(chan *MediaResponse, mediaCount)
 	for idx, media := range t.ExtendedEntities.Media {
-		go fetchMediaCh(t, idx, media, mediaRespChannel)
+		go fetchMediaCh(t, idx, mediaCount, media, mediaRespChannel)
 	}
 
-	mediaCount := len(t.ExtendedEntities.Media)
 	mediaRespList := make([]*MediaResponse, mediaCount)
 	for i := 0; i < mediaCount; i++ {
 		mediaRespList[i] = <-mediaRespChannel
