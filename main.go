@@ -1,45 +1,74 @@
 package main
 
 import (
-	"fmt"
-	"net/url"
-	"os"
+	"flag"
+
+	"log"
 
 	"github.com/ChimeraCoder/anaconda"
 )
 
-func FetchFavorites(api *anaconda.TwitterApi, screenName string) {
-	v := url.Values{}
-	// maximum count: 200
-	// count value for test: 5
-	v.Set("count", "1")
-	v.Set("screen_name", screenName)
+var cmd string
 
-	result, _ := api.GetFavorites(v)
-	for _, tweet := range result {
-		// TODO archive tweet
-		fmt.Println(tweet.Text)
-		fmt.Printf("%#v", tweet)
-	}
+func init() {
+	flag.StringVar(&cmd, "cmd", "", "command")
 }
 
 func main() {
-	api := DefaultAuthConfig().CreateApi()
-	util := TweetUtil{api, nil}
+	flag.Parse()
+	config := LoadConfig()
 
-	if os.Getenv("FETCH_SAMPLE") == "1" {
-		// sample tweet는 한번만 만들면 충분하다
-		// 이후에는 디버깅/테스트 목적으로 쓰인다
-		sampleTweet := util.FetchSampleTweet()
-		util.SaveJsonFile(&sampleTweet, "./sample-tweet.json")
-		fmt.Println("Fetch sample tweet : success")
-		os.Exit(0)
+	switch cmd {
+	case "fetch_testdata":
+		MainFetchTestData(config)
+	case "":
+		mainDefault(config)
+	default:
+		log.Fatalf("unknown command")
+	}
+}
+
+type StreamingHandler interface {
+	OnTweet(tweet *anaconda.Tweet)
+	OnFavorite(tweet *anaconda.EventTweet)
+	OnUnfavorite(twee *anaconda.EventTweet)
+}
+
+func mainDefault(config *Config) {
+	handlers := []StreamingHandler{
+		NewFavoriteImageArchiver(config),
 	}
 
-	for i := 0; i < 2; i++ {
-		t := util.RandomTweet()
-		fmt.Println(t.Id, t.Text)
+	api := config.NewDataSourceAuthConfig().CreateApi()
+	twitterStream := api.UserStream(nil)
+	for {
+		x := <-twitterStream.C
+		switch tweet := x.(type) {
+		case anaconda.Tweet:
+			for _, h := range handlers {
+				h.OnTweet(&tweet)
+			}
+		case anaconda.StatusDeletionNotice:
+			// pass
+		case anaconda.FriendsList:
+		case anaconda.EventTweet:
+			evt := tweet.Event.Event
+			switch evt {
+			case "favorite":
+				for _, h := range handlers {
+					h.OnFavorite(&tweet)
+				}
+			case "unfavorite":
+				for _, h := range handlers {
+					h.OnUnfavorite(&tweet)
+				}
+			case "favorited_retweet":
+				log.Println("favorited_retweet : skip")
+			default:
+				log.Printf("unknown event(%T) : %v \n", x, evt)
+			}
+		default:
+			log.Printf("unknown type(%T) : %v \n", x, x)
+		}
 	}
-
-	// TODO favorites 를 받는대로 어딘가에 저장하기
 }

@@ -1,34 +1,60 @@
 package main
 
 import (
-	"os"
+	"encoding/json"
+	"io/ioutil"
 
 	"github.com/ChimeraCoder/anaconda"
+	dropbox "github.com/tj/go-dropbox"
+	dropy "github.com/tj/go-dropy"
 )
 
-type AuthConfig struct {
-	consumerKey       string
-	consumerSecret    string
-	accessToken       string
-	accessTokenSecret string
+type TwitterAuthConfig struct {
+	ConsumerKey       string
+	ConsumerSecret    string
+	AccessToken       string
+	AccessTokenSecret string
 }
 
-func (config *AuthConfig) CreateApi() *anaconda.TwitterApi {
-	anaconda.SetConsumerKey(config.consumerKey)
-	anaconda.SetConsumerSecret(config.consumerSecret)
-	api := anaconda.NewTwitterApi(config.accessToken, config.accessTokenSecret)
+type Config struct {
+	DataSourceConsumerKey       string `json:"data_source_consumer_key"`
+	DataSourceConsumerSecret    string `json:"data_source_consumer_secret"`
+	DataSourceAccessToken       string `json:"data_source_access_token"`
+	DataSourceAccessTokenSecret string `json:"data_source_access_token_secret"`
+	DataSourceScreenName        string `json:"data_source_screen_name"`
 
-	// use automatic throttling
-	//api.SetDelay(1 * time.Second)
+	DropboxAppKey      string `json:"dropbox_app_key"`
+	DropboxAppSecret   string `json:"dropbox_app_secret"`
+	DropboxAccessToken string `json:"dropbox_access_token"`
+}
 
+func LoadConfig() *Config {
+	var config Config
+	data, errFile := ioutil.ReadFile("config.json")
+	check(errFile)
+	errJson := json.Unmarshal(data, &config)
+	check(errJson)
+	return &config
+}
+
+func (config *Config) NewDataSourceAuthConfig() *TwitterAuthConfig {
+	return &TwitterAuthConfig{
+		config.DataSourceConsumerKey,
+		config.DataSourceConsumerSecret,
+		config.DataSourceAccessToken,
+		config.DataSourceAccessTokenSecret,
+	}
+}
+
+func (config *TwitterAuthConfig) CreateApi() *anaconda.TwitterApi {
+	anaconda.SetConsumerKey(config.ConsumerKey)
+	anaconda.SetConsumerSecret(config.ConsumerSecret)
+	api := anaconda.NewTwitterApi(config.AccessToken, config.AccessTokenSecret)
 	return api
 }
 
-func DefaultAuthConfig() *AuthConfig {
-	return &AuthConfig{
-		os.Getenv("CONSUMER_KEY"),
-		os.Getenv("CONSUMER_SECRET"),
-		os.Getenv("ACCESS_TOKEN"),
-		os.Getenv("ACCESS_TOKEN_SECRET"),
-	}
+func (config *Config) CreateDropboxClient() *dropy.Client {
+	token := config.DropboxAccessToken
+	client := dropy.New(dropbox.New(dropbox.NewConfig(token)))
+	return client
 }
