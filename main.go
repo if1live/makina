@@ -1,7 +1,11 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"flag"
+	"net/http"
+	"os"
 
 	"log"
 
@@ -40,7 +44,27 @@ func mainDefault(config *Config) {
 }
 
 func mainServer(config *Config) {
+	type Status struct {
+		Ok bool `json:"ok"`
+	}
+	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
 
+		status := Status{
+			true,
+		}
+		data, _ := json.Marshal(status)
+		var out bytes.Buffer
+		json.Indent(&out, data, "", "  ")
+		w.Write(out.Bytes())
+	})
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3000"
+	}
+	log.Println("Server started: http://0.0.0.0:" + port)
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
 func mainStreaming(config *Config) {
