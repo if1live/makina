@@ -35,3 +35,6 @@ sample-tweet.json
 
 # config
 config.json
+
+# log
+*.log

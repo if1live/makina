@@ -112,16 +112,20 @@ func (ar *FavoriteMediaArchiver) OnFavorite(tweet *anaconda.EventTweet) {
 
 	//ar.saveLocal(t, mediaRespList)
 	ar.saveDropbox(t, mediaRespList)
-	log.Printf("Complete %s", t.IdStr)
+	log.Printf("FavoriteMediaArchiver Complete %s", t.IdStr)
 }
 
 func (ar *FavoriteMediaArchiver) saveLocal(tweet *anaconda.Tweet, mediaRespList []*MediaResponse) {
+	executablePath := GetExecutablePath()
+
 	jsonFilename := tweet.IdStr + ".json"
-	SaveTweetJsonFile(tweet, jsonFilename)
+	jsonFilePath := path.Join(executablePath, jsonFilename)
+	SaveTweetJsonFile(tweet, jsonFilePath)
 	log.Printf("Save Tweet %s  ->%s", tweet.IdStr, jsonFilename)
 
 	for _, resp := range mediaRespList {
-		file, err := os.OpenFile(resp.FileName, os.O_WRONLY|os.O_CREATE, 0644)
+		filepath := path.Join(executablePath, resp.FileName)
+		file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
 			panic(err)
 		}
