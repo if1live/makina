@@ -97,12 +97,17 @@ func fetchMediaCh(tweet *anaconda.Tweet, idx int, totalMediaCount int, media ana
 
 func (ar *FavoriteMediaArchiver) OnFavorite(tweet *anaconda.EventTweet) {
 	t := tweet.TargetObject
-	log.Printf("favorite : %s, %s\n", t.IdStr, t.Text)
 
-	if len(t.ExtendedEntities.Media) == 0 {
-		log.Printf("No media attached, skip")
+	// 남이 favorite한것도 이벤트로 들어오더라. 그래서 무시
+	if tweet.Source.ScreenName != ar.config.DataSourceScreenName {
 		return
 	}
+
+	if len(t.ExtendedEntities.Media) == 0 {
+		return
+	}
+
+	log.Printf("favorite : %s, %s\n", t.IdStr, t.Text)
 
 	mediaCount := len(t.ExtendedEntities.Media)
 
