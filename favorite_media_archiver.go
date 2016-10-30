@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"path/filepath"
 
@@ -107,7 +108,10 @@ func (ar *FavoriteMediaArchiver) OnFavorite(tweet *anaconda.EventTweet) {
 		return
 	}
 
+	// 파일명에 prefix가 있으면 저장 시점을 파악하기 쉬울것이다
 	log.Printf("favorite : %s, %s\n", t.IdStr, t.Text)
+	now := time.Now()
+	prefix := now.Format("20060102-150405-")
 
 	mediaCount := len(t.ExtendedEntities.Media)
 
@@ -121,36 +125,37 @@ func (ar *FavoriteMediaArchiver) OnFavorite(tweet *anaconda.EventTweet) {
 		mediaRespList[i] = <-mediaRespChannel
 	}
 
-	//ar.saveLocal(t, mediaRespList)
-	ar.saveDropbox(t, mediaRespList)
+	//ar.saveLocal(t, mediaRespList, prefix)
+	ar.saveDropbox(t, mediaRespList, prefix)
 	log.Printf("FavoriteMediaArchiver Complete %s", t.IdStr)
 }
 
-func (ar *FavoriteMediaArchiver) saveLocal(tweet *anaconda.Tweet, mediaRespList []*MediaResponse) {
+func (ar *FavoriteMediaArchiver) saveLocal(tweet *anaconda.Tweet, mediaRespList []*MediaResponse, prefix string) {
 	executablePath := GetExecutablePath()
 
-	jsonFilename := tweet.IdStr + ".json"
+	jsonFilename := prefix + tweet.IdStr + ".json"
 	jsonFilePath := path.Join(executablePath, jsonFilename)
 	SaveTweetJsonFile(tweet, jsonFilePath)
 	log.Printf("Save Tweet %s  ->%s", tweet.IdStr, jsonFilename)
 
 	for _, resp := range mediaRespList {
-		filepath := path.Join(executablePath, resp.FileName)
+		filename := prefix + resp.FileName
+		filepath := path.Join(executablePath, filename)
 		file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0644)
 		if err != nil {
 			panic(err)
 		}
 		file.Write(resp.Response.Data)
-		log.Printf("Save Image %s -> %s", tweet.IdStr, resp.FileName)
+		log.Printf("Save Image %s -> %s", tweet.IdStr, filename)
 		file.Close()
 	}
 }
 
-func (ar *FavoriteMediaArchiver) saveDropbox(tweet *anaconda.Tweet, mediaRespList []*MediaResponse) {
+func (ar *FavoriteMediaArchiver) saveDropbox(tweet *anaconda.Tweet, mediaRespList []*MediaResponse, prefix string) {
 	c := ar.client
 
 	// upload tweet metadata
-	jsonFilename := tweet.IdStr + ".json"
+	jsonFilename := prefix + tweet.IdStr + ".json"
 	b, err := json.Marshal(tweet)
 	check(err)
 	var jsonOut bytes.Buffer
@@ -167,13 +172,14 @@ func (ar *FavoriteMediaArchiver) saveDropbox(tweet *anaconda.Tweet, mediaRespLis
 
 	// upload media
 	for _, resp := range mediaRespList {
+		filename := prefix + resp.FileName
 		r := bytes.NewReader(resp.Response.Data)
-		uploadFilePath := path.Join(savePath, resp.FileName)
+		uploadFilePath := path.Join(savePath, filename)
 		err := c.Upload(uploadFilePath, r)
 		if err != nil {
-			log.Fatalf("Upload Image Fail! %s -> %s, [%s]", tweet.IdStr, resp.FileName, err.Error())
+			log.Fatalf("Upload Image Fail! %s -> %s, [%s]", tweet.IdStr, filename, err.Error())
 		} else {
-			log.Printf("Upload Image %s -> %s", tweet.IdStr, resp.FileName)
+			log.Printf("Upload Image %s -> %s", tweet.IdStr, filename)
 		}
 	}
 }
