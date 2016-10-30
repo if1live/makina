@@ -1,0 +1,13 @@
+# https://www.reddit.com/r/golang/comments/35v5bm/best_way_to_run_go_server_as_a_daemon/
+# /etc/systemd/system/makina.service 으로 symlink
+
+[Unit]
+Description=makina
+
+[Service]
+ExecStart=/home/pi/service/makina/makina -log=makina.log
+WorkingDirectory=/home/pi/service/makina
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
