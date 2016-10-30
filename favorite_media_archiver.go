@@ -68,11 +68,21 @@ func findURLFromPhoto(media anaconda.EntityMedia) string {
 	return media.Media_url
 }
 
+func findURLFromAnimatedGif(media anaconda.EntityMedia) string {
+	// 사실상 비디오랑 같은 취급
+	return findURLFromVideo(media)
+}
+
 func fetchMediaCh(tweet *anaconda.Tweet, idx int, totalMediaCount int, media anaconda.EntityMedia, resps chan<- *MediaResponse) {
 	url := ""
-	if media.Type == "video" {
+	switch media.Type {
+	case "video":
 		url = findURLFromVideo(media)
-	} else {
+	case "animated_gif":
+		url = findURLFromAnimatedGif(media)
+	case "photo":
+		url = findURLFromPhoto(media)
+	default:
 		url = findURLFromPhoto(media)
 	}
 
