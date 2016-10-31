@@ -77,6 +77,11 @@ func mainServer(config *Config) {
 		w.Write(out.Bytes())
 	})
 
+	// tweet id로 tweet 까보는 기능이 있으면 디버깅할떄 편하겠지?
+	http.HandleFunc("/tweet/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+	})
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "3000"
@@ -86,9 +91,15 @@ func mainServer(config *Config) {
 }
 
 func mainStreaming(config *Config) {
-	handlers := []StreamingHandler{
-		NewFavoriteMediaArchiver(config),
-		NewHitomiDetector(config),
+	handlers := []StreamingHandler{}
+	if config.UseDummy {
+		handlers = append(handlers, NewDummyHandler(config))
+	}
+	if config.UseFavoriteMediaArchiver {
+		handlers = append(handlers, NewFavoriteMediaArchiver(config))
+	}
+	if config.UseHaru {
+		handlers = append(handlers, NewHitomiDetector(config))
 	}
 
 	ignorableEvents := []string{

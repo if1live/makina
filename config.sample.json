@@ -7,5 +7,9 @@
 
   "dropbox_app_key": "todo",
   "dropbox_app_secret": "todo",
-  "dropbox_access_token": "todo"
+  "dropbox_access_token": "todo",
+
+  "use_dummy": true,
+  "use_favorite_media_archiver": true,
+  "use_haru": true
 }

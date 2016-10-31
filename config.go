@@ -28,6 +28,10 @@ type Config struct {
 	DropboxAppKey      string `json:"dropbox_app_key"`
 	DropboxAppSecret   string `json:"dropbox_app_secret"`
 	DropboxAccessToken string `json:"dropbox_access_token"`
+
+	UseDummy                 bool `json:"use_dummy"`
+	UseFavoriteMediaArchiver bool `json:"use_favorite_media_archiver"`
+	UseHaru                  bool `json:"use_haru"`
 }
 
 func LoadConfig() *Config {
