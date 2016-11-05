@@ -45,6 +45,8 @@ func main() {
 	config := LoadConfig()
 
 	switch cmd {
+	case "devel":
+		mainDevel(config)
 	case "fetch_testdata":
 		MainFetchTestData(config)
 	case "":
@@ -58,6 +60,9 @@ type StreamingHandler interface {
 	OnTweet(tweet *anaconda.Tweet)
 	OnEvent(ev string, event *anaconda.EventTweet)
 	OnDirectMessage(dm *anaconda.DirectMessage)
+}
+
+func mainDevel(config *Config) {
 }
 
 func mainDefault(config *Config) {
@@ -110,6 +115,7 @@ func mainStreaming(config *Config) {
 		cfg := hitomi.Config{
 			MyName:         config.DataSourceScreenName,
 			Accessor:       config.NewStorageAccessor(savePath),
+			StatusSender:   config.MakeSender(config.SenderCategory),
 			HaruHostName:   config.HaruHostName,
 			HaruExecutable: config.HaruFilePath,
 			ShowLog:        false,

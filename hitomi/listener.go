@@ -1,6 +1,7 @@
 package hitomi
 
 import (
+	"fmt"
 	"log"
 	"path/filepath"
 	"regexp"
@@ -8,19 +9,15 @@ import (
 	"time"
 
 	"github.com/ChimeraCoder/anaconda"
-	"github.com/if1live/makina/storages"
 )
 
 type Listener struct {
 	config Config
-
-	accessor storages.Accessor
 }
 
 func NewListener(config Config) *Listener {
 	detector := &Listener{
-		config:   config,
-		accessor: config.Accessor,
+		config: config,
 	}
 	return detector
 }
@@ -85,8 +82,14 @@ func FetchFull(code int, config Config) {
 		// upload
 		baseZipFileName := filepath.Base(zipfilename)
 		config.Accessor.UploadFile(zipfilename, baseZipFileName)
+		log.Printf("Haru Upload %s", baseZipFileName)
+
+		body := fmt.Sprintf("Fetch(%d) %s success", code, baseZipFileName)
+		config.StatusSender.Send("Makina-Hitomi", body)
 
 	} else {
-		log.Printf("Haru Failed %s", code)
+		body := fmt.Sprintf("Fetch(%d) failed", code)
+		log.Printf(body)
+		config.StatusSender.Send("Makina-Hitomi", body)
 	}
 }

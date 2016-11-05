@@ -7,6 +7,7 @@ import (
 	"path"
 
 	"github.com/ChimeraCoder/anaconda"
+	"github.com/if1live/makina/senders"
 	"github.com/if1live/makina/storages"
 )
 
@@ -28,6 +29,8 @@ type Config struct {
 	DropboxAppSecret   string `json:"dropbox_app_secret"`
 	DropboxAccessToken string `json:"dropbox_access_token"`
 
+	PushbulletAccessToken string `json:"pushbullet_access_token"`
+
 	UseDummy         bool `json:"use_dummy"`
 	UseMediaArchiver bool `json:"use_media_archiver"`
 	UseHaru          bool `json:"use_haru"`
@@ -36,6 +39,8 @@ type Config struct {
 
 	HaruFilePath string `json:"haru_filepath"`
 	HaruHostName string `json:"haru_hostname"`
+
+	SenderCategory string `json:"sender_category"`
 }
 
 func LoadConfig() *Config {
@@ -67,6 +72,21 @@ func (config *Config) NewStorageAccessor(rootpath string) storages.Accessor {
 		return storages.NewDropbox(rootpath, config.DropboxAccessToken)
 	default:
 		return nil
+	}
+}
+
+func (config *Config) MakeSender(category string) *senders.Sender {
+	switch category {
+	case "pushbullet":
+		s := senders.NewPushbullet(config.PushbulletAccessToken)
+		return senders.New(s)
+	case "dm":
+		api := config.NewDataSourceAuthConfig().CreateApi()
+		s := senders.NewDirectMessage(api, config.DataSourceScreenName)
+		return senders.New(s)
+	default:
+		s := senders.NewFake()
+		return senders.New(s)
 	}
 }
 

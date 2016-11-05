@@ -10,6 +10,7 @@ install:
   - go get github.com/tj/go-dropy
   - go get github.com/kardianos/osext
   - go get github.com/stretchr/testify/assert
+  - go get github.com/xconstruct/go-pushbullet
 
 script:
   - go test ./...
