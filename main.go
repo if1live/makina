@@ -47,8 +47,6 @@ func main() {
 	switch cmd {
 	case "devel":
 		mainDevel(config)
-	case "fetch_testdata":
-		MainFetchTestData(config)
 	case "":
 		mainDefault(config)
 	default:
