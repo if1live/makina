@@ -108,9 +108,11 @@ func mainStreaming(config *Config) {
 	if config.UseHaru {
 		const savePath = "/hitomi-temp"
 		cfg := hitomi.Config{
-			MyName:       config.DataSourceScreenName,
-			Accessor:     config.NewStorageAccessor(savePath),
-			HaruHostName: config.HaruHostName,
+			MyName:         config.DataSourceScreenName,
+			Accessor:       config.NewStorageAccessor(savePath),
+			HaruHostName:   config.HaruHostName,
+			HaruExecutable: config.HaruFilePath,
+			ShowLog:        false,
 		}
 		handlers = append(handlers, hitomi.NewListener(cfg))
 	}

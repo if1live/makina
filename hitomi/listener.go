@@ -11,20 +11,6 @@ import (
 	"github.com/if1live/makina/storages"
 )
 
-const (
-	haruPath           = "../haru"
-	haruExecutableName = "haru"
-)
-
-type Config struct {
-	MyName   string
-	Accessor storages.Accessor
-
-	HaruExecutable string
-	HaruHostName   string
-	ShowLog        bool
-}
-
 type Listener struct {
 	config Config
 
