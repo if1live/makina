@@ -7,8 +7,7 @@ import (
 	"path"
 
 	"github.com/ChimeraCoder/anaconda"
-	dropbox "github.com/tj/go-dropbox"
-	dropy "github.com/tj/go-dropy"
+	"github.com/if1live/makina/storages"
 )
 
 type TwitterAuthConfig struct {
@@ -29,9 +28,13 @@ type Config struct {
 	DropboxAppSecret   string `json:"dropbox_app_secret"`
 	DropboxAccessToken string `json:"dropbox_access_token"`
 
-	UseDummy                 bool `json:"use_dummy"`
-	UseFavoriteMediaArchiver bool `json:"use_favorite_media_archiver"`
-	UseHaru                  bool `json:"use_haru"`
+	UseDummy         bool `json:"use_dummy"`
+	UseMediaArchiver bool `json:"use_media_archiver"`
+	UseHaru          bool `json:"use_haru"`
+
+	StorageName string `json:"storage_name"`
+
+	HaruFilePath string `json:"haru_filepath"`
 }
 
 func LoadConfig() *Config {
@@ -55,15 +58,20 @@ func (config *Config) NewDataSourceAuthConfig() *TwitterAuthConfig {
 	}
 }
 
+func (config *Config) NewStorageAccessor(rootpath string) storages.Accessor {
+	switch config.StorageName {
+	case "local":
+		return storages.NewLocal()
+	case "dropbox":
+		return storages.NewDropbox(rootpath, config.DropboxAccessToken)
+	default:
+		return nil
+	}
+}
+
 func (config *TwitterAuthConfig) CreateApi() *anaconda.TwitterApi {
 	anaconda.SetConsumerKey(config.ConsumerKey)
 	anaconda.SetConsumerSecret(config.ConsumerSecret)
 	api := anaconda.NewTwitterApi(config.AccessToken, config.AccessTokenSecret)
 	return api
-}
-
-func (config *Config) CreateDropboxClient() *dropy.Client {
-	token := config.DropboxAccessToken
-	client := dropy.New(dropbox.New(dropbox.NewConfig(token)))
-	return client
 }

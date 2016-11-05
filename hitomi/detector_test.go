@@ -1,4 +1,4 @@
-package main
+package hitomi
 
 import (
 	"testing"
@@ -40,6 +40,8 @@ func TestFindReaderNumber(t *testing.T) {
 		{"이거 4728472782번 들었는데", -1},
 		{"이거 123456번 들었는데", -1},
 
+		{"abc 123456시간 테스트", -1},
+
 		// mention + hash
 		{"@0c442e114489450", -1},
 		{"@123456", -1},
@@ -64,10 +66,9 @@ func TestFindReaderNumber(t *testing.T) {
 		// TODO 계좌번호 포맷으로 추정될 경우?
 	}
 
-	detector := HitomiDetector{nil, nil}
 	now := time.Date(2016, 10, 30, 0, 0, 0, 0, time.UTC)
 	for _, c := range cases {
-		actual := detector.FindReaderNumber(c.text, now)
+		actual := FindReaderNumber(c.text, now)
 		if c.num != actual {
 			t.Errorf("FindReaderNumber - expected %d, got %d, [%s]", c.num, actual, c.text)
 		}

@@ -12,9 +12,6 @@ func NewDummyHandler(config *Config) *DummyHandler {
 
 func (h *DummyHandler) OnTweet(tweet *anaconda.Tweet) {
 }
+func (h *DummyHandler) OnEvent(ev string, event *anaconda.EventTweet) {
 
-func (h *DummyHandler) OnFavorite(tweet *anaconda.EventTweet) {
-}
-
-func (h *DummyHandler) OnUnfavorite(tweet *anaconda.EventTweet) {
 }

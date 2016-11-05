@@ -11,6 +11,7 @@ import (
 	"log"
 
 	"github.com/ChimeraCoder/anaconda"
+	"github.com/if1live/makina/media_archiver"
 )
 
 var cmd string
@@ -52,8 +53,7 @@ func main() {
 
 type StreamingHandler interface {
 	OnTweet(tweet *anaconda.Tweet)
-	OnFavorite(tweet *anaconda.EventTweet)
-	OnUnfavorite(twee *anaconda.EventTweet)
+	OnEvent(ev string, event *anaconda.EventTweet)
 }
 
 func mainDefault(config *Config) {
@@ -95,16 +95,18 @@ func mainStreaming(config *Config) {
 	if config.UseDummy {
 		handlers = append(handlers, NewDummyHandler(config))
 	}
-	if config.UseFavoriteMediaArchiver {
-		handlers = append(handlers, NewFavoriteMediaArchiver(config))
-	}
-	if config.UseHaru {
-		handlers = append(handlers, NewHitomiDetector(config))
+
+	if config.UseMediaArchiver {
+		const savePath = "/archive-temp"
+		cfg := media_archiver.Config{
+			Accessor: config.NewStorageAccessor(savePath),
+			MyName:   config.DataSourceScreenName,
+		}
+		handlers = append(handlers, media_archiver.NewMediaArchiver(cfg))
 	}
 
-	ignorableEvents := []string{
-		"favorited_retweet",
-		"retweeted_retweet",
+	if config.UseHaru {
+		handlers = append(handlers, NewHitomiDetector(config))
 	}
 
 	api := config.NewDataSourceAuthConfig().CreateApi()
@@ -121,29 +123,8 @@ func mainStreaming(config *Config) {
 		case anaconda.FriendsList:
 		case anaconda.EventTweet:
 			evt := tweet.Event.Event
-			switch evt {
-			case "favorite":
-				for _, h := range handlers {
-					go h.OnFavorite(&tweet)
-				}
-			case "unfavorite":
-				for _, h := range handlers {
-					go h.OnUnfavorite(&tweet)
-				}
-			default:
-				ignorable := false
-				for _, evtname := range ignorableEvents {
-					if evtname == evt {
-						ignorable = true
-						break
-					}
-				}
-
-				if ignorable {
-					log.Printf("event = %s : skip\n", evt)
-				} else {
-					log.Printf("unknown event(%T) : %v \n", x, evt)
-				}
+			for _, h := range handlers {
+				go h.OnEvent(evt, &tweet)
 			}
 		default:
 			log.Printf("unknown type(%T) : %v \n", x, x)
