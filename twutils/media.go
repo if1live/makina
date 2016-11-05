@@ -55,7 +55,7 @@ func MakeMediaFileName(tweet *anaconda.Tweet, media anaconda.EntityMedia) string
 	found := -1
 	for i := 0; i < mediaCount; i++ {
 		m := tweet.ExtendedEntities.Media[i]
-		if m.Display_url == media.Display_url {
+		if m.Media_url == media.Media_url {
 			found = i
 			break
 		}
