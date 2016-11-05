@@ -4,27 +4,12 @@ import (
 	"fmt"
 	"log"
 	"os/exec"
-	"path"
 	"regexp"
 	"strings"
-
-	"github.com/kardianos/osext"
 )
 
-type Config struct {
-	ExecutablePath string
-	ExecutableName string
-	ShowLog        bool
-}
-
-func getExecutablePath() string {
-	path, _ := osext.ExecutableFolder()
-	return path
-}
-
 func ExecuteHaru(config Config, code int) (bool, string) {
-	currDir := getExecutablePath()
-	cmd := path.Join(currDir, config.ExecutablePath, config.ExecutablePath)
+	cmd := config.HaruExecutable
 	args := []string{
 		fmt.Sprintf("-id=%d", code),
 		"-service=hitomi",

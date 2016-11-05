@@ -35,6 +35,7 @@ type Config struct {
 	StorageName string `json:"storage_name"`
 
 	HaruFilePath string `json:"haru_filepath"`
+	HaruHostName string `json:"haru_hostname"`
 }
 
 func LoadConfig() *Config {

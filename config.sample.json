@@ -9,10 +9,10 @@
   "dropbox_app_secret": "todo",
   "dropbox_access_token": "todo",
 
-  "use_dummy": true,
   "use_media_archiver": true,
   "use_haru": false,
 
   "storage_name": "local",
-  "haru_filepath": "/tmp/haru"
+  "haru_filepath": "/tmp/haru",
+  "haru_hostname": "192.168.200.1:3000"
 }

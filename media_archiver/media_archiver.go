@@ -40,7 +40,8 @@ func (ar *MediaArchiver) OnEvent(ev string, event *anaconda.EventTweet) {
 		ar.OnRetweet(event)
 	}
 }
-
+func (ar *MediaArchiver) OnDirectMessage(dm *anaconda.DirectMessage) {
+}
 func (ar *MediaArchiver) OnRetweet(tweet *anaconda.EventTweet) {
 	// 내가 RT한것만 저장
 	if tweet.Source.ScreenName != ar.myName {

@@ -10,7 +10,10 @@ import (
 
 	"log"
 
+	"net/url"
+
 	"github.com/ChimeraCoder/anaconda"
+	"github.com/if1live/makina/hitomi"
 	"github.com/if1live/makina/media_archiver"
 )
 
@@ -54,6 +57,7 @@ func main() {
 type StreamingHandler interface {
 	OnTweet(tweet *anaconda.Tweet)
 	OnEvent(ev string, event *anaconda.EventTweet)
+	OnDirectMessage(dm *anaconda.DirectMessage)
 }
 
 func mainDefault(config *Config) {
@@ -92,10 +96,6 @@ func mainServer(config *Config) {
 
 func mainStreaming(config *Config) {
 	handlers := []StreamingHandler{}
-	if config.UseDummy {
-		handlers = append(handlers, NewDummyHandler(config))
-	}
-
 	if config.UseMediaArchiver {
 		const savePath = "/archive-temp"
 		cfg := media_archiver.Config{
@@ -106,11 +106,18 @@ func mainStreaming(config *Config) {
 	}
 
 	if config.UseHaru {
-		handlers = append(handlers, NewHitomiDetector(config))
+		const savePath = "/hitomi-temp"
+		cfg := hitomi.Config{
+			MyName:       config.DataSourceScreenName,
+			Accessor:     config.NewStorageAccessor(savePath),
+			HaruHostName: config.HaruHostName,
+		}
+		handlers = append(handlers, hitomi.NewListener(cfg))
 	}
 
 	api := config.NewDataSourceAuthConfig().CreateApi()
-	twitterStream := api.UserStream(nil)
+	v := url.Values{}
+	twitterStream := api.UserStream(v)
 	for {
 		x := <-twitterStream.C
 		switch tweet := x.(type) {
@@ -121,13 +128,20 @@ func mainStreaming(config *Config) {
 		case anaconda.StatusDeletionNotice:
 			// pass
 		case anaconda.FriendsList:
+			// pass
 		case anaconda.EventTweet:
 			evt := tweet.Event.Event
 			for _, h := range handlers {
 				go h.OnEvent(evt, &tweet)
 			}
+		case anaconda.DirectMessage:
+			for _, h := range handlers {
+				go h.OnDirectMessage(&tweet)
+			}
 		default:
-			log.Printf("unknown type(%T) : %v \n", x, x)
+			if x != nil {
+				log.Printf("unknown type(%T) : %v \n", x, x)
+			}
 		}
 	}
 }
