@@ -13,14 +13,19 @@ import (
 	"net/url"
 
 	"github.com/ChimeraCoder/anaconda"
+	raven "github.com/getsentry/raven-go"
 )
 
 var cmd string
 var logfilename string
+var config *Config
 
 func init() {
 	flag.StringVar(&cmd, "cmd", "", "command")
 	flag.StringVar(&logfilename, "log", "", "log filename")
+
+	config = LoadConfig()
+	raven.SetDSN(config.SentryDSN)
 }
 
 func main() {
@@ -39,8 +44,6 @@ func main() {
 		defer f.Close()
 		log.SetOutput(f)
 	}
-
-	config := LoadConfig()
 
 	switch cmd {
 	case "devel":

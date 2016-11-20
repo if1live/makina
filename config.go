@@ -38,6 +38,8 @@ type Config struct {
 	StorageName string `json:"storage_name"`
 
 	SenderCategory string `json:"sender_category"`
+
+	SentryDSN string `json:"sentry_dsn"`
 }
 
 func LoadConfig() *Config {

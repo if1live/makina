@@ -2,6 +2,7 @@ package rules
 
 import (
 	"log"
+	"os"
 	"regexp"
 
 	"time"
@@ -11,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/ChimeraCoder/anaconda"
+	raven "github.com/getsentry/raven-go"
 	"github.com/if1live/makina/hitomiwatcher"
 	"github.com/if1live/makina/senders"
 	"github.com/if1live/makina/storages"
@@ -51,7 +53,8 @@ func (r *DirectMessageWatcher) OnDirectMessage(dm *anaconda.DirectMessage) {
 
 	success := false
 	success = success || r.hitomiPreview("hitomi preview", text)
-	success = success || r.status("status", text)
+	success = success || r.checkStatus("status", text)
+	success = success || r.checkSentry("sentry", text)
 	if !success {
 		r.StatusSender.SendTitleOnly(errorMsg)
 	}
@@ -78,8 +81,8 @@ func (r *DirectMessageWatcher) hitomiPreview(title, text string) bool {
 	return false
 }
 
-func (r *DirectMessageWatcher) status(title, text string) bool {
-	if text == "status" {
+func (r *DirectMessageWatcher) checkStatus(title, text string) bool {
+	if text == "check status" {
 		log.Printf("DM: %s\n", title)
 
 		now := time.Now()
@@ -89,5 +92,16 @@ func (r *DirectMessageWatcher) status(title, text string) bool {
 		return true
 	}
 
+	return false
+}
+
+func (r *DirectMessageWatcher) checkSentry(title, text string) bool {
+	if text == "check sentry" {
+		_, err := os.Open("invalid-file-to-raise-error")
+		if err != nil {
+			raven.CaptureErrorAndWait(err, nil)
+		}
+		return true
+	}
 	return false
 }
