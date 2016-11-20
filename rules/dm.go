@@ -51,57 +51,151 @@ func (r *DirectMessageWatcher) OnDirectMessage(dm *anaconda.DirectMessage) {
 		return
 	}
 
-	success := false
-	success = success || r.hitomiPreview("hitomi preview", text)
-	success = success || r.checkStatus("status", text)
-	success = success || r.checkSentry("sentry", text)
-	if !success {
+	cmds := []LineCommand{
+		NewHitomiPreviewCommand(r.Accessor),
+		NewStatusCommand(),
+		NewSentryCommand(),
+	}
+	helpCmd := NewHelpCommand(cmds)
+
+	executeCount := 0
+	for _, cmd := range cmds {
+		if cmd.match(text) {
+			cmd.execute(text, r.StatusSender)
+			executeCount++
+		}
+	}
+	if helpCmd.match(text) {
+		helpCmd.execute(text, r.StatusSender)
+		executeCount++
+	}
+
+	if executeCount == 0 {
 		r.StatusSender.SendTitleOnly(errorMsg)
+	}
+}
+
+// 간단한 텍스트 기반의 명령어
+type LineCommand interface {
+	match(text string) bool
+	execute(text string, sender *senders.Sender)
+	help() string
+}
+
+type HelpCommand struct {
+	title string
+	cmds  []LineCommand
+}
+
+func NewHelpCommand(cmds []LineCommand) LineCommand {
+	return &HelpCommand{
+		title: "help",
+		cmds:  cmds,
+	}
+}
+func (c *HelpCommand) help() string {
+	return "help"
+}
+func (c *HelpCommand) match(text string) bool {
+	return text == "help"
+}
+func (c *HelpCommand) execute(text string, sender *senders.Sender) {
+	lines := make([]string, len(c.cmds))
+	for i, cmd := range c.cmds {
+		lines[i] = cmd.help()
+	}
+	help := strings.Join(lines, "\n")
+	sender.Send(c.title, help)
+}
+
+type HitomiPreviewCommand struct {
+	title    string
+	accessor storages.Accessor
+}
+
+func NewHitomiPreviewCommand(accessor storages.Accessor) LineCommand {
+	return &HitomiPreviewCommand{
+		title:    "Hitomi Preview",
+		accessor: accessor,
 	}
 }
 
 var reHitomiPreview = regexp.MustCompile(`^hitomi preview (\d{6})$`)
 
-func (r *DirectMessageWatcher) hitomiPreview(title, text string) bool {
+func (c *HitomiPreviewCommand) match(text string) bool {
+	return reHitomiPreview.MatchString(text)
+}
+func (c *HitomiPreviewCommand) execute(text string, sender *senders.Sender) {
+	title := c.title
 	for _, m := range reHitomiPreview.FindAllStringSubmatch(text, -1) {
 		code := m[1]
 		log.Printf("DM: %s %s\n", title, code)
 
 		go func() {
-			ok := hitomiwatcher.FetchPreview(code, nil, r.Accessor)
+			ok := hitomiwatcher.FetchPreview(code, nil, c.accessor)
 			if ok {
-				r.StatusSender.Send(title, fmt.Sprintf("success : %s", code))
+				sender.Send(title, fmt.Sprintf("success : %s", code))
 			} else {
-				r.StatusSender.Send(title, fmt.Sprintf("fail : %s", code))
+				sender.Send(title, fmt.Sprintf("fail : %s", code))
 			}
 		}()
-		return true
 	}
-
-	return false
 }
 
-func (r *DirectMessageWatcher) checkStatus(title, text string) bool {
-	if text == "check status" {
-		log.Printf("DM: %s\n", title)
-
-		now := time.Now()
-		msg := now.Format(time.RFC3339)
-		r.StatusSender.Send(title, "still alive : "+msg)
-
-		return true
-	}
-
-	return false
+func (c *HitomiPreviewCommand) help() string {
+	return "hitomi preview 123456"
 }
 
-func (r *DirectMessageWatcher) checkSentry(title, text string) bool {
-	if text == "check sentry" {
-		_, err := os.Open("invalid-file-to-raise-error")
-		if err != nil {
-			raven.CaptureErrorAndWait(err, nil)
-		}
-		return true
+type StatusCommand struct {
+	title string
+	cmd   string
+}
+
+func NewStatusCommand() LineCommand {
+	return &StatusCommand{
+		title: "status",
+		cmd:   "check status",
 	}
-	return false
+}
+
+func (c *StatusCommand) help() string {
+	return c.cmd
+}
+func (c *StatusCommand) execute(text string, sender *senders.Sender) {
+	title := c.title
+
+	now := time.Now()
+	msg := now.Format(time.RFC3339)
+	sender.Send(title, "still alive : "+msg)
+}
+func (c *StatusCommand) match(text string) bool {
+	return text == c.cmd
+}
+
+type SentryCommand struct {
+	title string
+	cmd   string
+}
+
+func NewSentryCommand() LineCommand {
+	return &SentryCommand{
+		title: "sentry",
+		cmd:   "check sentry",
+	}
+}
+func (c *SentryCommand) help() string {
+	return c.cmd
+}
+func (c *SentryCommand) execute(text string, sender *senders.Sender) {
+	_, err := os.Open("invalid-file-to-raise-error")
+	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
+		sender.Send(c.title, "sentry success")
+	} else {
+		sender.Send(c.title, "sentry fail")
+	}
+}
+
+func (c *SentryCommand) match(text string) bool {
+	return text == c.cmd
 }
