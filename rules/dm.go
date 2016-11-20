@@ -41,31 +41,45 @@ func (r *DirectMessageWatcher) OnDirectMessage(dm *anaconda.DirectMessage) {
 	}
 
 	text := dm.Text
-	r.hitomiPreview(text)
-	r.status(text)
+	success := false
+	success = success || r.hitomiPreview("hitomi preview", text)
+	success = success || r.status("status", text)
+	if !success {
+		r.StatusSender.Send("Error", "invalid command")
+	}
 }
 
 var reHitomiPreview = regexp.MustCompile(`^hitomi preview (\d{6})$`)
 
-func (r *DirectMessageWatcher) hitomiPreview(text string) {
+func (r *DirectMessageWatcher) hitomiPreview(title, text string) bool {
 	for _, m := range reHitomiPreview.FindAllStringSubmatch(text, -1) {
 		code := m[1]
-		log.Printf("DM: hitomi preview %s\n", code)
-		ok := hitomiwatcher.FetchPreview(code, nil, r.Accessor)
-		if ok {
-			r.StatusSender.Send("hitomi preview", fmt.Sprintf("success : %s", code))
-		} else {
-			r.StatusSender.Send("hitomi preview", fmt.Sprintf("fail : %s", code))
-		}
+		log.Printf("DM: %s %s\n", title, code)
+
+		go func() {
+			ok := hitomiwatcher.FetchPreview(code, nil, r.Accessor)
+			if ok {
+				r.StatusSender.Send(title, fmt.Sprintf("success : %s", code))
+			} else {
+				r.StatusSender.Send(title, fmt.Sprintf("fail : %s", code))
+			}
+		}()
+		return true
 	}
+
+	return false
 }
 
-func (r *DirectMessageWatcher) status(text string) {
+func (r *DirectMessageWatcher) status(title, text string) bool {
 	if text == "status" {
-		log.Println("DM: status")
+		log.Printf("DM: %s\n", title)
 
 		now := time.Now()
 		msg := now.Format(time.RFC3339)
-		r.StatusSender.Send("still alive", msg)
+		r.StatusSender.Send(title, "still alive : "+msg)
+
+		return true
 	}
+
+	return false
 }
