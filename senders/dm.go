@@ -20,8 +20,10 @@ func NewDirectMessage(api *anaconda.TwitterApi, myName string) SendStrategy {
 
 // 트위터는 제목과 내용의 구분이 없다
 func makeContent(title, body string) string {
-	content := fmt.Sprintf("title: %s\r\n%s", title, body)
-	return content
+	if len(body) == 0 {
+		return title
+	}
+	return fmt.Sprintf("title: %s\r\n%s", title, body)
 }
 func (s *DirectMessageSendStrategy) Send(title, body string) {
 	content := makeContent(title, body)

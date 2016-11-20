@@ -8,6 +8,8 @@ import (
 
 	"fmt"
 
+	"strings"
+
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/if1live/makina/hitomiwatcher"
 	"github.com/if1live/makina/senders"
@@ -40,12 +42,18 @@ func (r *DirectMessageWatcher) OnDirectMessage(dm *anaconda.DirectMessage) {
 		return
 	}
 
-	text := dm.Text
+	errorMsg := "Invalid command"
+
+	text := strings.Trim(dm.Text, " ")
+	if text == errorMsg {
+		return
+	}
+
 	success := false
 	success = success || r.hitomiPreview("hitomi preview", text)
 	success = success || r.status("status", text)
 	if !success {
-		r.StatusSender.Send("Error", "invalid command")
+		r.StatusSender.SendTitleOnly(errorMsg)
 	}
 }
 

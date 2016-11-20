@@ -25,6 +25,11 @@ func (s *Sender) Send(title, body string) {
 	s.strategy.Send(title, body)
 }
 
+func (s *Sender) SendTitleOnly(title string) {
+	s.last = Message{title, ""}
+	s.strategy.Send(title, "")
+}
+
 func (s *Sender) GetLastMessage() Message {
 	return s.last
 }
