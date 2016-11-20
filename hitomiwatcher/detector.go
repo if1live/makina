@@ -1,4 +1,4 @@
-package hitomi
+package hitomiwatcher
 
 import (
 	"net/url"
@@ -55,6 +55,7 @@ var simpleIgnoreReList = []*regexp.Regexp{
 	regexp.MustCompile(`\d{6}분`),
 	regexp.MustCompile(`\d{6}시`),
 	regexp.MustCompile(`\d{6}번`),
+	regexp.MustCompile(`\d{6}명`),
 	regexp.MustCompile(`\d{6}시간`),
 	regexp.MustCompile(`\d{6}개`),
 	regexp.MustCompile(`\d{6}cm`),

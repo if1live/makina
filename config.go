@@ -7,6 +7,7 @@ import (
 	"path"
 
 	"github.com/ChimeraCoder/anaconda"
+	"github.com/if1live/makina/rules"
 	"github.com/if1live/makina/senders"
 	"github.com/if1live/makina/storages"
 )
@@ -31,14 +32,10 @@ type Config struct {
 
 	PushbulletAccessToken string `json:"pushbullet_access_token"`
 
-	UseDummy         bool `json:"use_dummy"`
-	UseMediaArchiver bool `json:"use_media_archiver"`
-	UseHaru          bool `json:"use_haru"`
+	PushoverToken string `json:"pushover_token"`
+	PushoverUser  string `json:"pushover_user"`
 
 	StorageName string `json:"storage_name"`
-
-	HaruFilePath string `json:"haru_filepath"`
-	HaruHostName string `json:"haru_hostname"`
 
 	SenderCategory string `json:"sender_category"`
 }
@@ -95,4 +92,28 @@ func (config *TwitterAuthConfig) CreateApi() *anaconda.TwitterApi {
 	anaconda.SetConsumerSecret(config.ConsumerSecret)
 	api := anaconda.NewTwitterApi(config.AccessToken, config.AccessTokenSecret)
 	return api
+}
+
+func (c *Config) NewRules() []rules.Rule {
+	sender := c.MakeSender(c.SenderCategory)
+	rs := []rules.Rule{}
+	{
+		const savePath = "/archive-temp"
+		a := c.NewStorageAccessor(savePath)
+		r := rules.NewMediaArchiver(a, c.DataSourceScreenName)
+		rs = append(rs, r)
+	}
+	{
+		const savePath = "/hitomi-temp"
+		a := c.NewStorageAccessor(savePath)
+		r := rules.NewHitomiWatcher(c.DataSourceScreenName, a)
+		rs = append(rs, r)
+	}
+	{
+		const savePath = "/dm-temp"
+		a := c.NewStorageAccessor(savePath)
+		r := rules.NewDirectMessageWatcher(c.DataSourceScreenName, a, sender)
+		rs = append(rs, r)
+	}
+	return rs
 }

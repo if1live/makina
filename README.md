@@ -1,18 +1,9 @@
 # makina
 unknown 
 
-## Install
-```
-# dependencies
-go get github.com/ChimeraCoder/anaconda
-go get github.com/tj/go-dropy
-go get github.com/kardianos/osext
-go get github.com/stretchr/testify/assert
-go get github.com/xconstruct/go-pushbullet
-```
-
 ## Run
 ```
+go get -u ./...
 go build
 
 # without log file (console log)

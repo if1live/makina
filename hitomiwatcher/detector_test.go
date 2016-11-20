@@ -1,4 +1,4 @@
-package hitomi
+package hitomiwatcher
 
 import (
 	"testing"

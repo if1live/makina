@@ -1,26 +1,22 @@
-package media_archiver
+package rules
 
 import (
 	"log"
 
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/if1live/makina/storages"
+	"github.com/if1live/makina/twutils"
 )
-
-type Config struct {
-	Accessor storages.Accessor
-	MyName   string
-}
 
 type MediaArchiver struct {
 	accessor storages.Accessor
 	myName   string
 }
 
-func NewMediaArchiver(config Config) *MediaArchiver {
+func NewMediaArchiver(accessor storages.Accessor, myName string) Rule {
 	archiver := &MediaArchiver{
-		accessor: config.Accessor,
-		myName:   config.MyName,
+		accessor: accessor,
+		myName:   myName,
 	}
 	return archiver
 }
@@ -72,5 +68,5 @@ func handleTweet(tweet *anaconda.Tweet, accessor storages.Accessor) {
 	if len(tweet.ExtendedEntities.Media) == 0 {
 		return
 	}
-	Archive(tweet, accessor)
+	twutils.ArchiveMedia(tweet, accessor)
 }

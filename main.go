@@ -13,8 +13,6 @@ import (
 	"net/url"
 
 	"github.com/ChimeraCoder/anaconda"
-	"github.com/if1live/makina/hitomi"
-	"github.com/if1live/makina/media_archiver"
 )
 
 var cmd string
@@ -52,12 +50,6 @@ func main() {
 	default:
 		log.Fatalf("unknown command")
 	}
-}
-
-type StreamingHandler interface {
-	OnTweet(tweet *anaconda.Tweet)
-	OnEvent(ev string, event *anaconda.EventTweet)
-	OnDirectMessage(dm *anaconda.DirectMessage)
 }
 
 func mainDevel(config *Config) {
@@ -98,28 +90,7 @@ func mainServer(config *Config) {
 }
 
 func mainStreaming(config *Config) {
-	handlers := []StreamingHandler{}
-	if config.UseMediaArchiver {
-		const savePath = "/archive-temp"
-		cfg := media_archiver.Config{
-			Accessor: config.NewStorageAccessor(savePath),
-			MyName:   config.DataSourceScreenName,
-		}
-		handlers = append(handlers, media_archiver.NewMediaArchiver(cfg))
-	}
-
-	if config.UseHaru {
-		const savePath = "/hitomi-temp"
-		cfg := hitomi.Config{
-			MyName:         config.DataSourceScreenName,
-			Accessor:       config.NewStorageAccessor(savePath),
-			StatusSender:   config.MakeSender(config.SenderCategory),
-			HaruHostName:   config.HaruHostName,
-			HaruExecutable: config.HaruFilePath,
-			ShowLog:        false,
-		}
-		handlers = append(handlers, hitomi.NewListener(cfg))
-	}
+	handlers := config.NewRules()
 
 	api := config.NewDataSourceAuthConfig().CreateApi()
 	v := url.Values{}

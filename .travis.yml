@@ -1,18 +1,18 @@
 language: go
 
 go:
-  - master
+  - 1.6
+  - 1.7
+  - tip
 
+matrix:
+  allow_failures:
+    - go: tip
+  fast_finish: true
 sudo: false
 
-install:
-  - go get github.com/ChimeraCoder/anaconda
-  - go get github.com/tj/go-dropy
-  - go get github.com/kardianos/osext
-  - go get github.com/stretchr/testify/assert
-  - go get github.com/xconstruct/go-pushbullet
-
 script:
+  - go get -v ./...
   - go test ./...
   - go build -v
 

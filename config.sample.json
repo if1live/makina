@@ -11,8 +11,8 @@
 
   "pushbullet_access_token": "todo",
 
-  "use_media_archiver": true,
-  "use_haru": false,
+  "pushover_token": "todo",
+  "pushover_user": "todo",
 
   "storage_name": "local",
   "haru_filepath": "/tmp/haru",
