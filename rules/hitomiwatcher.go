@@ -16,7 +16,7 @@ type HitomiWatcher struct {
 	Accessor storages.Accessor
 }
 
-func NewHitomiWatcher(myName string, accessor storages.Accessor) Rule {
+func NewHitomiWatcher(myName string, accessor storages.Accessor) TweetRule {
 	detector := &HitomiWatcher{
 		MyName:   myName,
 		Accessor: accessor,
@@ -57,7 +57,4 @@ func (d *HitomiWatcher) OnEvent(ev string, event *anaconda.EventTweet) {
 	case "favorite":
 		d.OnFavorite(event)
 	}
-}
-
-func (d *HitomiWatcher) OnDirectMessage(dm *anaconda.DirectMessage) {
 }

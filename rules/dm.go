@@ -24,7 +24,7 @@ type DirectMessageWatcher struct {
 	StatusSender *senders.Sender
 }
 
-func NewDirectMessageWatcher(MyName string, Accessor storages.Accessor, StatusSender *senders.Sender) Rule {
+func NewDirectMessageWatcher(MyName string, Accessor storages.Accessor, StatusSender *senders.Sender) MessageRule {
 	r := &DirectMessageWatcher{
 		MyName:       MyName,
 		Accessor:     Accessor,
@@ -33,12 +33,6 @@ func NewDirectMessageWatcher(MyName string, Accessor storages.Accessor, StatusSe
 	return r
 }
 
-func (r *DirectMessageWatcher) OnTweet(tweet *anaconda.Tweet) {
-
-}
-func (r *DirectMessageWatcher) OnEvent(ev string, event *anaconda.EventTweet) {
-
-}
 func (r *DirectMessageWatcher) OnDirectMessage(dm *anaconda.DirectMessage) {
 	if dm.Sender.ScreenName != r.MyName {
 		return
@@ -129,7 +123,7 @@ func (c *HitomiPreviewCommand) execute(text string, sender *senders.Sender) {
 	title := c.title
 	for _, m := range reHitomiPreview.FindAllStringSubmatch(text, -1) {
 		code := m[1]
-		log.Printf("DM: %s %s\n", title, code)
+		log.Printf("DM: %s %s", title, code)
 
 		go func() {
 			ok := hitomiwatcher.FetchPreview(code, nil, c.accessor)
@@ -162,6 +156,7 @@ func (c *StatusCommand) help() string {
 	return c.cmd
 }
 func (c *StatusCommand) execute(text string, sender *senders.Sender) {
+	log.Printf("DM: %s", c.title)
 	title := c.title
 
 	now := time.Now()
@@ -187,6 +182,7 @@ func (c *SentryCommand) help() string {
 	return c.cmd
 }
 func (c *SentryCommand) execute(text string, sender *senders.Sender) {
+	log.Printf("DM: %s", c.title)
 	_, err := os.Open("invalid-file-to-raise-error")
 	if err != nil {
 		raven.CaptureErrorAndWait(err, nil)

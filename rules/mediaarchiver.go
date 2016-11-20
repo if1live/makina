@@ -13,7 +13,7 @@ type MediaArchiver struct {
 	myName   string
 }
 
-func NewMediaArchiver(accessor storages.Accessor, myName string) Rule {
+func NewMediaArchiver(accessor storages.Accessor, myName string) TweetRule {
 	archiver := &MediaArchiver{
 		accessor: accessor,
 		myName:   myName,
@@ -35,8 +35,6 @@ func (ar *MediaArchiver) OnEvent(ev string, event *anaconda.EventTweet) {
 	case "favorited_retweet":
 		ar.OnRetweet(event)
 	}
-}
-func (ar *MediaArchiver) OnDirectMessage(dm *anaconda.DirectMessage) {
 }
 func (ar *MediaArchiver) OnRetweet(tweet *anaconda.EventTweet) {
 	// 내가 RT한것만 저장

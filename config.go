@@ -32,6 +32,9 @@ type Config struct {
 
 	PushbulletAccessToken string `json:"pushbullet_access_token"`
 
+	TwitterSenderAccessToken       string `json:"twitter_sender_access_token"`
+	TwitterSenderAccessTokenSecret string `json:"twitter_sender_access_token_secret"`
+
 	PushoverToken string `json:"pushover_token"`
 	PushoverUser  string `json:"pushover_user"`
 
@@ -80,7 +83,7 @@ func (config *Config) MakeSender(category string) *senders.Sender {
 		s := senders.NewPushbullet(config.PushbulletAccessToken)
 		return senders.New(s)
 	case "dm":
-		api := config.NewDataSourceAuthConfig().CreateApi()
+		api := config.CreateTwitterSenderApi()
 		s := senders.NewDirectMessage(api, config.DataSourceScreenName)
 		return senders.New(s)
 	default:
@@ -96,9 +99,15 @@ func (config *TwitterAuthConfig) CreateApi() *anaconda.TwitterApi {
 	return api
 }
 
-func (c *Config) NewRules() []rules.Rule {
-	sender := c.MakeSender(c.SenderCategory)
-	rs := []rules.Rule{}
+func (c *Config) CreateTwitterSenderApi() *anaconda.TwitterApi {
+	anaconda.SetConsumerKey(c.DataSourceConsumerKey)
+	anaconda.SetConsumerSecret(c.DataSourceConsumerSecret)
+	api := anaconda.NewTwitterApi(c.TwitterSenderAccessToken, c.TwitterSenderAccessTokenSecret)
+	return api
+}
+
+func (c *Config) NewTweetRules() []rules.TweetRule {
+	rs := []rules.TweetRule{}
 	{
 		const savePath = "/archive-temp"
 		a := c.NewStorageAccessor(savePath)
@@ -111,6 +120,11 @@ func (c *Config) NewRules() []rules.Rule {
 		r := rules.NewHitomiWatcher(c.DataSourceScreenName, a)
 		rs = append(rs, r)
 	}
+	return rs
+}
+func (c *Config) NewMessageRules() []rules.MessageRule {
+	sender := c.MakeSender(c.SenderCategory)
+	rs := []rules.MessageRule{}
 	{
 		const savePath = "/dm-temp"
 		a := c.NewStorageAccessor(savePath)

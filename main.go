@@ -60,6 +60,7 @@ func mainDevel(config *Config) {
 
 func mainDefault(config *Config) {
 	go mainServer(config)
+	go mainDirectMessageStreaming(config)
 	mainStreaming(config)
 }
 
@@ -93,7 +94,7 @@ func mainServer(config *Config) {
 }
 
 func mainStreaming(config *Config) {
-	handlers := config.NewRules()
+	handlers := config.NewTweetRules()
 
 	api := config.NewDataSourceAuthConfig().CreateApi()
 	v := url.Values{}
@@ -115,12 +116,26 @@ func mainStreaming(config *Config) {
 				go h.OnEvent(evt, &tweet)
 			}
 		case anaconda.DirectMessage:
-			for _, h := range handlers {
-				go h.OnDirectMessage(&tweet)
-			}
+			// pass
 		default:
 			if x != nil {
 				log.Printf("unknown type(%T) : %v \n", x, x)
+			}
+		}
+	}
+}
+
+func mainDirectMessageStreaming(config *Config) {
+	rs := config.NewMessageRules()
+	api := config.CreateTwitterSenderApi()
+	v := url.Values{}
+	twitterStream := api.UserStream(v)
+	for {
+		x := <-twitterStream.C
+		switch tweet := x.(type) {
+		case anaconda.DirectMessage:
+			for _, h := range rs {
+				go h.OnDirectMessage(&tweet)
 			}
 		}
 	}
