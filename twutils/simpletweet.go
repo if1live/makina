@@ -26,7 +26,7 @@ func NewSimpleTweet(t *anaconda.Tweet) SimpleTweet {
 		Text:       t.Text,
 		ID:         t.Id,
 		ScreenName: t.User.ScreenName,
-		UserName:   t.User.Description,
+		UserName:   t.User.Name,
 		URL:        url,
 		CreatedAt:  t.CreatedAt,
 	}
