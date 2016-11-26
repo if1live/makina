@@ -52,7 +52,8 @@ func MakeMediaFileName(tweet *anaconda.Tweet, media anaconda.EntityMedia) string
 	if mediaCount <= 1 {
 		url := FindMediaURL(media)
 		ext := filepath.Ext(url)
-		return fmt.Sprintf("%s%s", tweet.IdStr, ext)
+		id := ProfitIdStr(tweet)
+		return fmt.Sprintf("%s%s", id, ext)
 	}
 
 	found := -1
@@ -72,15 +73,16 @@ func MakeMediaFileName(tweet *anaconda.Tweet, media anaconda.EntityMedia) string
 	num := found + 1
 	url := FindMediaURL(media)
 	ext := filepath.Ext(url)
-	return fmt.Sprintf("%s_%d%s", tweet.IdStr, num, ext)
+	id := ProfitIdStr(tweet)
+	return fmt.Sprintf("%s_%d%s", id, num, ext)
 }
 
 func MakePrefix(now time.Time) string {
 	return now.Format("20060102-150405-")
 }
-func MakeTweetFileName(id string, now time.Time) string {
+func MakeTweetFileName(id string, now time.Time, ext string) string {
 	prefix := MakePrefix(now)
-	filename := prefix + id + ".json"
+	filename := prefix + id + ext
 	return filename
 }
 func MakeNormalFileName(filename string, now time.Time) string {
@@ -92,11 +94,31 @@ type UploadMetadataResponse struct {
 	FileName string
 }
 
-// TODO 하위 폴더로 정리해서 업로드하는게 필요해질지 모른다
-func UploadMetadata(t *anaconda.Tweet, accessor storages.Accessor, path string, now time.Time) (UploadMetadataResponse, error) {
+func ProfitIdStr(t *anaconda.Tweet) string {
 	id := t.IdStr
-	filename := MakeTweetFileName(id, now)
+	if t.RetweetedStatus != nil {
+		id = t.RetweetedStatus.IdStr
+	}
+	return id
+}
+
+// TODO 하위 폴더로 정리해서 업로드하는게 필요해질지 모른다
+func UploadFullMetadata(t *anaconda.Tweet, accessor storages.Accessor, path string, now time.Time) (UploadMetadataResponse, error) {
+	id := ProfitIdStr(t)
+	filename := MakeTweetFileName(id, now, ".json")
 	e := accessor.UploadJson(t, filename)
+	resp := UploadMetadataResponse{
+		ID:       id,
+		FileName: filename,
+	}
+	return resp, e
+}
+
+func UploadMetadata(t *anaconda.Tweet, accessor storages.Accessor, path string, now time.Time) (UploadMetadataResponse, error) {
+	id := ProfitIdStr(t)
+	filename := MakeTweetFileName(id, now, ".yaml")
+	simpleTweet := NewSimpleTweet(t)
+	e := accessor.UploadYaml(simpleTweet, filename)
 	resp := UploadMetadataResponse{
 		ID:       id,
 		FileName: filename,
@@ -141,6 +163,7 @@ func fetchMediaCh(tweet *anaconda.Tweet, media anaconda.EntityMedia, resps chan<
 
 func save(tweet *anaconda.Tweet, mediaRespList []*MediaResponse, accessor storages.Accessor) {
 	now := time.Now()
+	id := ProfitIdStr(tweet)
 
 	resp, e := UploadMetadata(tweet, accessor, "", now)
 	if e != nil {
@@ -154,9 +177,9 @@ func save(tweet *anaconda.Tweet, mediaRespList []*MediaResponse, accessor storag
 		filename := MakeNormalFileName(resp.FileName, now)
 		err := accessor.UploadBytes(resp.Data, filename)
 		if err != nil {
-			log.Fatalf("Save Image Fail! %s -> %s, [%s]", tweet.IdStr, filename, err.Error())
+			log.Fatalf("Save Image Fail! %s -> %s, [%s]", id, filename, err.Error())
 		} else {
-			log.Printf("Save Image %s -> %s", tweet.IdStr, filename)
+			log.Printf("Save Image %s -> %s", id, filename)
 		}
 	}
 }

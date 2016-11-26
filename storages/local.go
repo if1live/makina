@@ -8,6 +8,7 @@ import (
 	"path"
 
 	"github.com/kardianos/osext"
+	"gopkg.in/yaml.v2"
 )
 
 type Local struct {
@@ -41,6 +42,23 @@ func (c *Local) UploadJson(data interface{}, dst string) error {
 	out.WriteTo(w)
 
 	w.Flush()
+	return nil
+}
+
+func (c *Local) UploadYaml(data interface{}, dst string) error {
+	d, err := yaml.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	filepath := path.Join(c.RootPath, dst)
+	f, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	f.Write(d)
 	return nil
 }
 

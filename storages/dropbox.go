@@ -7,6 +7,8 @@ import (
 	"os"
 	"path"
 
+	yaml "gopkg.in/yaml.v2"
+
 	dropbox "github.com/tj/go-dropbox"
 	dropy "github.com/tj/go-dropy"
 )
@@ -41,6 +43,16 @@ func (c *Dropbox) UploadJson(data interface{}, dst string) error {
 	json.Indent(&jsonOut, b, "", "  ")
 
 	r := bytes.NewReader(jsonOut.Bytes())
+	uploadFilePath := path.Join(c.RootPath, dst)
+	e := c.client.Upload(uploadFilePath, r)
+	return e
+}
+
+func (c *Dropbox) UploadYaml(data interface{}, dst string) error {
+	d, err := yaml.Marshal(data)
+	check(err)
+
+	r := bytes.NewReader(d)
 	uploadFilePath := path.Join(c.RootPath, dst)
 	e := c.client.Upload(uploadFilePath, r)
 	return e

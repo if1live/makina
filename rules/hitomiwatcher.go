@@ -9,6 +9,7 @@ import (
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/if1live/makina/hitomiwatcher"
 	"github.com/if1live/makina/storages"
+	"github.com/if1live/makina/twutils"
 )
 
 type HitomiWatcher struct {
@@ -30,10 +31,11 @@ func (d *HitomiWatcher) OnTweet(tweet *anaconda.Tweet) {
 		return
 	}
 
+	id := twutils.ProfitIdStr(tweet)
 	codestr := strconv.Itoa(code)
-	log.Printf("Hitomi Found Code %d, %s", code, tweet.IdStr)
+	log.Printf("Hitomi Found Code %d, %s", code, id)
 	hitomiwatcher.FetchPreview(codestr, tweet, d.Accessor)
-	log.Printf("Hitomi Fetch Preview Complete %s", tweet.IdStr)
+	log.Printf("Hitomi Fetch Preview Complete %s", id)
 }
 
 func (d *HitomiWatcher) OnFavorite(tweet *anaconda.EventTweet) {
@@ -47,10 +49,11 @@ func (d *HitomiWatcher) OnFavorite(tweet *anaconda.EventTweet) {
 		return
 	}
 
+	id := twutils.ProfitIdStr(t)
 	codestr := strconv.Itoa(code)
-	log.Printf("Hitomi Found Code %d, %s", code, t.IdStr)
+	log.Printf("Hitomi Found Code %d, %s", code, id)
 	hitomiwatcher.FetchPreview(codestr, t, d.Accessor)
-	log.Printf("Hitomi Fetch Preview Complete %s", t.IdStr)
+	log.Printf("Hitomi Fetch Preview Complete %s", id)
 }
 func (d *HitomiWatcher) OnEvent(ev string, event *anaconda.EventTweet) {
 	switch ev {

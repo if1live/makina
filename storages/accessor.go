@@ -2,6 +2,8 @@ package storages
 
 type Accessor interface {
 	UploadJson(data interface{}, dst string) error
+	UploadYaml(data interface{}, dst string) error
+
 	UploadBytes(data []byte, dst string) error
 	UploadFile(src string, dst string) error
 
