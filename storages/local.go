@@ -32,6 +32,9 @@ func (c *Local) UploadJson(data interface{}, dst string) error {
 	json.Indent(&out, b, "", "  ")
 
 	filepath := path.Join(c.RootPath, dst)
+	dir := path.Dir(filepath)
+	c.Mkdir(dir)
+
 	f, err := os.Create(filepath)
 	if err != nil {
 		return err
@@ -52,6 +55,9 @@ func (c *Local) UploadYaml(data interface{}, dst string) error {
 	}
 
 	filepath := path.Join(c.RootPath, dst)
+	dir := path.Dir(filepath)
+	c.Mkdir(dir)
+
 	f, err := os.Create(filepath)
 	if err != nil {
 		return err
@@ -64,6 +70,9 @@ func (c *Local) UploadYaml(data interface{}, dst string) error {
 
 func (c *Local) UploadBytes(data []byte, dst string) error {
 	filepath := path.Join(c.RootPath, dst)
+	dir := path.Dir(filepath)
+	c.Mkdir(dir)
+
 	file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		panic(err)

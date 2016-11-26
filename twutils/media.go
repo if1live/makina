@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"path"
+
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/if1live/makina/storages"
 )
@@ -103,9 +105,11 @@ func ProfitIdStr(t *anaconda.Tweet) string {
 }
 
 // TODO 하위 폴더로 정리해서 업로드하는게 필요해질지 모른다
-func UploadFullMetadata(t *anaconda.Tweet, accessor storages.Accessor, path string, now time.Time) (UploadMetadataResponse, error) {
+func UploadFullMetadata(t *anaconda.Tweet, accessor storages.Accessor, dir string, now time.Time) (UploadMetadataResponse, error) {
 	id := ProfitIdStr(t)
 	filename := MakeTweetFileName(id, now, ".json")
+	filename = path.Join(dir, filename)
+
 	e := accessor.UploadJson(t, filename)
 	resp := UploadMetadataResponse{
 		ID:       id,
@@ -114,9 +118,11 @@ func UploadFullMetadata(t *anaconda.Tweet, accessor storages.Accessor, path stri
 	return resp, e
 }
 
-func UploadMetadata(t *anaconda.Tweet, accessor storages.Accessor, path string, now time.Time) (UploadMetadataResponse, error) {
+func UploadMetadata(t *anaconda.Tweet, accessor storages.Accessor, dir string, now time.Time) (UploadMetadataResponse, error) {
 	id := ProfitIdStr(t)
 	filename := MakeTweetFileName(id, now, ".yaml")
+	filename = path.Join(dir, filename)
+
 	simpleTweet := NewSimpleTweet(t)
 	e := accessor.UploadYaml(simpleTweet, filename)
 	resp := UploadMetadataResponse{
@@ -131,7 +137,7 @@ type MediaResponse struct {
 	FileName string
 }
 
-func ArchiveMedia(tweet *anaconda.Tweet, accessor storages.Accessor) {
+func ArchiveMedia(tweet *anaconda.Tweet, accessor storages.Accessor, dir string) {
 	mediaCount := len(tweet.ExtendedEntities.Media)
 
 	mediaRespChannel := make(chan *MediaResponse, mediaCount)
@@ -144,7 +150,7 @@ func ArchiveMedia(tweet *anaconda.Tweet, accessor storages.Accessor) {
 		mediaRespList[i] = <-mediaRespChannel
 	}
 
-	save(tweet, mediaRespList, accessor)
+	save(tweet, mediaRespList, accessor, dir)
 }
 
 func fetchMediaCh(tweet *anaconda.Tweet, media anaconda.EntityMedia, resps chan<- *MediaResponse) {
@@ -161,11 +167,11 @@ func fetchMediaCh(tweet *anaconda.Tweet, media anaconda.EntityMedia, resps chan<
 	}
 }
 
-func save(tweet *anaconda.Tweet, mediaRespList []*MediaResponse, accessor storages.Accessor) {
+func save(tweet *anaconda.Tweet, mediaRespList []*MediaResponse, accessor storages.Accessor, dir string) {
 	now := time.Now()
 	id := ProfitIdStr(tweet)
 
-	resp, e := UploadMetadata(tweet, accessor, "", now)
+	resp, e := UploadMetadata(tweet, accessor, dir, now)
 	if e != nil {
 		log.Fatalf("Save Tweet Fail! %s -> %s, [%s]", resp.ID, resp.FileName, e.Error())
 	} else {
@@ -175,6 +181,7 @@ func save(tweet *anaconda.Tweet, mediaRespList []*MediaResponse, accessor storag
 	// upload media
 	for _, resp := range mediaRespList {
 		filename := MakeNormalFileName(resp.FileName, now)
+		filename = path.Join(dir, filename)
 		err := accessor.UploadBytes(resp.Data, filename)
 		if err != nil {
 			log.Fatalf("Save Image Fail! %s -> %s, [%s]", id, filename, err.Error())

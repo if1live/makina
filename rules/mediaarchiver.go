@@ -45,7 +45,7 @@ func (ar *MediaArchiver) OnRetweet(tweet *anaconda.EventTweet) {
 	t := tweet.TargetObject
 	id := twutils.ProfitIdStr(t)
 	log.Printf("retweet : %s, %s\n", id, t.Text)
-	handleTweet(t, ar.accessor)
+	handleTweet(t, ar.accessor, "retweet")
 	log.Printf("MediaArchiver Complete %s", id)
 }
 
@@ -57,16 +57,16 @@ func (ar *MediaArchiver) OnFavorite(tweet *anaconda.EventTweet) {
 	t := tweet.TargetObject
 	id := twutils.ProfitIdStr(t)
 	log.Printf("favorite : %s, %s\n", id, t.Text)
-	handleTweet(t, ar.accessor)
+	handleTweet(t, ar.accessor, "favorite")
 	log.Printf("MediaArchiver Complete %s", id)
 }
 
-func handleTweet(tweet *anaconda.Tweet, accessor storages.Accessor) {
+func handleTweet(tweet *anaconda.Tweet, accessor storages.Accessor, dir string) {
 	if tweet == nil {
 		return
 	}
 	if len(tweet.ExtendedEntities.Media) == 0 {
 		return
 	}
-	twutils.ArchiveMedia(tweet, accessor)
+	twutils.ArchiveMedia(tweet, accessor, dir)
 }
