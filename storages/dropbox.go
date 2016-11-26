@@ -44,8 +44,6 @@ func (c *Dropbox) UploadJson(data interface{}, dst string) error {
 
 	r := bytes.NewReader(jsonOut.Bytes())
 	uploadFilePath := path.Join(c.RootPath, dst)
-	dir := path.Dir(uploadFilePath)
-	c.Mkdir(dir)
 	e := c.client.Upload(uploadFilePath, r)
 	return e
 }
@@ -56,8 +54,6 @@ func (c *Dropbox) UploadYaml(data interface{}, dst string) error {
 
 	r := bytes.NewReader(d)
 	uploadFilePath := path.Join(c.RootPath, dst)
-	dir := path.Dir(uploadFilePath)
-	c.Mkdir(dir)
 	e := c.client.Upload(uploadFilePath, r)
 	return e
 }
@@ -65,16 +61,12 @@ func (c *Dropbox) UploadYaml(data interface{}, dst string) error {
 func (c *Dropbox) UploadBytes(data []byte, dst string) error {
 	r := bytes.NewReader(data)
 	uploadFilePath := path.Join(c.RootPath, dst)
-	dir := path.Dir(uploadFilePath)
-	c.Mkdir(dir)
 	err := c.client.Upload(uploadFilePath, r)
 	return err
 }
 
 func (c *Dropbox) UploadFile(src string, dst string) error {
 	uploadFilePath := path.Join(c.RootPath, dst)
-	dir := path.Dir(uploadFilePath)
-	c.Mkdir(dir)
 	file, _ := os.Open(src)
 	r := bufio.NewReader(file)
 	err := c.client.Upload(uploadFilePath, r)
