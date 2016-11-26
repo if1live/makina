@@ -79,9 +79,6 @@ func (config *Config) NewStorageAccessor(rootpath string) storages.Accessor {
 
 func (config *Config) MakeSender(category string) *senders.Sender {
 	switch category {
-	case "pushbullet":
-		s := senders.NewPushbullet(config.PushbulletAccessToken)
-		return senders.New(s)
 	case "dm":
 		api := config.CreateTwitterSenderApi()
 		s := senders.NewDirectMessage(api, config.DataSourceScreenName)

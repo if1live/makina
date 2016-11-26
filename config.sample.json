@@ -9,8 +9,6 @@
   "dropbox_app_secret": "todo",
   "dropbox_access_token": "todo",
 
-  "pushbullet_access_token": "todo",
-
   "twitter_sender_access_token": "todo",
   "twitter_sender_access_token_secret": "todo",
 
@@ -18,6 +16,6 @@
   "haru_filepath": "/tmp/haru",
   "haru_hostname": "192.168.200.1:3000",
 
-  "sender_category": "pushbullet",
+  "sender_category": "dm",
   "sentry_dsn": "todo"
 }
