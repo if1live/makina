@@ -56,11 +56,15 @@ var simpleIgnoreReList = []*regexp.Regexp{
 	regexp.MustCompile(`\d{6}시`),
 	regexp.MustCompile(`\d{6}번`),
 	regexp.MustCompile(`\d{6}명`),
+	regexp.MustCompile(`\d{6}원`),
 	regexp.MustCompile(`\d{6}시간`),
 	regexp.MustCompile(`\d{6}개`),
+	regexp.MustCompile(`\d{6}점`),
 	regexp.MustCompile(`\d{6}cm`),
 	regexp.MustCompile(`\d{6}m`),
 	regexp.MustCompile(`\d{6}km`),
+	regexp.MustCompile(`\d{6}点`),
+	regexp.MustCompile(`\d{6}GTB`),
 }
 
 var reGallery = regexp.MustCompile(`/galleries/(\d{6}).html`)
