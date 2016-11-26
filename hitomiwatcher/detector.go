@@ -101,24 +101,38 @@ func filterBlacklist(word string, blacklist []string) bool {
 	return true
 }
 
+func filterRecentDate(word string, now time.Time) bool {
+	t, err := time.Parse("060102", word)
+	if err != nil {
+		return true
+	}
+
+	// 올해, 작년 날짜로 추정되면 무시
+	invalidYears := []int{
+		now.Year() - 1,
+		now.Year(),
+	}
+	for _, year := range invalidYears {
+		if t.Year() == year {
+			return false
+		}
+	}
+	return true
+}
+
 func findReaderNumberFromText(word string, now time.Time) int {
 	blacklist := make([]string, len(predefinedBlackList))
 	copy(blacklist, predefinedBlackList)
 
-	// 오늘 +-N일 제외
-	// 약간 크게 잡는게 좋을거같다
-	for i := -60; i <= 60; i++ {
-		duration := time.Hour * time.Duration(24*i)
-		t := now.Add(duration)
-		datestr := t.Format("060102")
-		blacklist = append(blacklist, datestr)
-	}
 	if len(word) < 6 {
 		return notFound
 	}
 
 	if len(word) == 6 {
 		if ok := filterBlacklist(word, blacklist); !ok {
+			return notFound
+		}
+		if ok := filterRecentDate(word, now); !ok {
 			return notFound
 		}
 		if m := reValidCode.MatchString(word); m {
@@ -153,6 +167,9 @@ func findReaderNumberFromText(word string, now time.Time) int {
 
 	for _, m := range reValidCode.FindAllStringSubmatch(word, -1) {
 		if ok := filterBlacklist(m[1], blacklist); !ok {
+			return notFound
+		}
+		if ok := filterRecentDate(m[1], now); !ok {
 			return notFound
 		}
 
