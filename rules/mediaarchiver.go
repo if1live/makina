@@ -36,8 +36,6 @@ func (ar *MediaArchiver) OnEvent(ev string, event *anaconda.EventTweet) {
 		ar.OnFavorite(event)
 	case "retweeted_retweet":
 		ar.OnRetweet(event)
-	case "favorited_retweet":
-		ar.OnRetweet(event)
 	}
 }
 func (ar *MediaArchiver) OnRetweet(tweet *anaconda.EventTweet) {
@@ -47,10 +45,7 @@ func (ar *MediaArchiver) OnRetweet(tweet *anaconda.EventTweet) {
 	}
 
 	t := tweet.TargetObject
-	id := twutils.ProfitIdStr(t)
-	log.Printf("retweet : %s, %s\n", id, t.Text)
 	ar.handleTweet(t, ar.accessor, "retweet")
-	log.Printf("MediaArchiver Complete %s", id)
 }
 
 func (ar *MediaArchiver) OnFavorite(tweet *anaconda.EventTweet) {
@@ -59,10 +54,7 @@ func (ar *MediaArchiver) OnFavorite(tweet *anaconda.EventTweet) {
 		return
 	}
 	t := tweet.TargetObject
-	id := twutils.ProfitIdStr(t)
-	log.Printf("favorite : %s, %s\n", id, t.Text)
 	ar.handleTweet(t, ar.accessor, "favorite")
-	log.Printf("MediaArchiver Complete %s", id)
 }
 
 func (ar *MediaArchiver) handleTweet(tweet *anaconda.Tweet, accessor storages.Accessor, dir string) {
@@ -73,7 +65,9 @@ func (ar *MediaArchiver) handleTweet(tweet *anaconda.Tweet, accessor storages.Ac
 		return
 	}
 
-	category := ""
+	// 기본 카테고리는 tweet or favorite
+	// 더 좋은 카테고리가 있을떄 교체하는 식으로 동작한다
+	category := dir
 
 	for _, user := range ar.predefinedUsers {
 		// 트위터 계정명은 대소문자를 구분하지 않더라
@@ -85,9 +79,8 @@ func (ar *MediaArchiver) handleTweet(tweet *anaconda.Tweet, accessor storages.Ac
 		}
 	}
 
-	if category != "" {
-		twutils.ArchiveMedia(tweet, accessor, category)
-	} else {
-		twutils.ArchiveMedia(tweet, accessor, dir)
-	}
+	id := twutils.ProfitIdStr(tweet)
+	log.Printf("Media Archive %s : %s, %s\n", category, id, tweet.Text)
+	twutils.ArchiveMedia(tweet, accessor, category)
+	log.Printf("MediaArchiver Complete %s", id)
 }
