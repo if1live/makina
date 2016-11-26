@@ -38,3 +38,7 @@ config.json
 
 # log
 *.log
+
+# saved files
+user-*
+media-*

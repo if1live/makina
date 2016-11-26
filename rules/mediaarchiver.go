@@ -36,6 +36,11 @@ func (ar *MediaArchiver) OnEvent(ev string, event *anaconda.EventTweet) {
 		ar.OnFavorite(event)
 	case "retweeted_retweet":
 		ar.OnRetweet(event)
+	case "favorited_retweet":
+		// 특정 트윗을 favorite했는데
+		// favorite 와 favorited_retweet 가 동시에 발생하는 상황이 있더라
+		//ar.OnRetweet(event)
+		break
 	}
 }
 func (ar *MediaArchiver) OnRetweet(tweet *anaconda.EventTweet) {
@@ -45,7 +50,7 @@ func (ar *MediaArchiver) OnRetweet(tweet *anaconda.EventTweet) {
 	}
 
 	t := tweet.TargetObject
-	ar.handleTweet(t, ar.accessor, "retweet")
+	ar.handleTweet(t, ar.accessor, "media-retweet")
 }
 
 func (ar *MediaArchiver) OnFavorite(tweet *anaconda.EventTweet) {
@@ -54,7 +59,7 @@ func (ar *MediaArchiver) OnFavorite(tweet *anaconda.EventTweet) {
 		return
 	}
 	t := tweet.TargetObject
-	ar.handleTweet(t, ar.accessor, "favorite")
+	ar.handleTweet(t, ar.accessor, "media-favorite")
 }
 
 func (ar *MediaArchiver) handleTweet(tweet *anaconda.Tweet, accessor storages.Accessor, dir string) {
