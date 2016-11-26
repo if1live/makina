@@ -3,20 +3,24 @@ package rules
 import (
 	"log"
 
+	"strings"
+
 	"github.com/ChimeraCoder/anaconda"
 	"github.com/if1live/makina/storages"
 	"github.com/if1live/makina/twutils"
 )
 
 type MediaArchiver struct {
-	accessor storages.Accessor
-	myName   string
+	accessor        storages.Accessor
+	myName          string
+	predefinedUsers []string
 }
 
-func NewMediaArchiver(accessor storages.Accessor, myName string) TweetRule {
+func NewMediaArchiver(accessor storages.Accessor, myName string, users []string) TweetRule {
 	archiver := &MediaArchiver{
-		accessor: accessor,
-		myName:   myName,
+		accessor:        accessor,
+		myName:          myName,
+		predefinedUsers: users,
 	}
 	return archiver
 }
@@ -45,7 +49,7 @@ func (ar *MediaArchiver) OnRetweet(tweet *anaconda.EventTweet) {
 	t := tweet.TargetObject
 	id := twutils.ProfitIdStr(t)
 	log.Printf("retweet : %s, %s\n", id, t.Text)
-	handleTweet(t, ar.accessor, "retweet")
+	ar.handleTweet(t, ar.accessor, "retweet")
 	log.Printf("MediaArchiver Complete %s", id)
 }
 
@@ -57,16 +61,33 @@ func (ar *MediaArchiver) OnFavorite(tweet *anaconda.EventTweet) {
 	t := tweet.TargetObject
 	id := twutils.ProfitIdStr(t)
 	log.Printf("favorite : %s, %s\n", id, t.Text)
-	handleTweet(t, ar.accessor, "favorite")
+	ar.handleTweet(t, ar.accessor, "favorite")
 	log.Printf("MediaArchiver Complete %s", id)
 }
 
-func handleTweet(tweet *anaconda.Tweet, accessor storages.Accessor, dir string) {
+func (ar *MediaArchiver) handleTweet(tweet *anaconda.Tweet, accessor storages.Accessor, dir string) {
 	if tweet == nil {
 		return
 	}
 	if len(tweet.ExtendedEntities.Media) == 0 {
 		return
 	}
-	twutils.ArchiveMedia(tweet, accessor, dir)
+
+	category := ""
+
+	for _, user := range ar.predefinedUsers {
+		// 트위터 계정명은 대소문자를 구분하지 않더라
+		s1 := strings.ToLower(user)
+		s2 := strings.ToLower(twutils.ProfitScreenName(tweet))
+		if s1 == s2 {
+			category = "user-" + user
+			break
+		}
+	}
+
+	if category != "" {
+		twutils.ArchiveMedia(tweet, accessor, category)
+	} else {
+		twutils.ArchiveMedia(tweet, accessor, dir)
+	}
 }

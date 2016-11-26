@@ -96,14 +96,6 @@ type UploadMetadataResponse struct {
 	FileName string
 }
 
-func ProfitIdStr(t *anaconda.Tweet) string {
-	id := t.IdStr
-	if t.RetweetedStatus != nil {
-		id = t.RetweetedStatus.IdStr
-	}
-	return id
-}
-
 // TODO 하위 폴더로 정리해서 업로드하는게 필요해질지 모른다
 func UploadFullMetadata(t *anaconda.Tweet, accessor storages.Accessor, dir string, now time.Time) (UploadMetadataResponse, error) {
 	id := ProfitIdStr(t)

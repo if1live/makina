@@ -30,13 +30,10 @@ type Config struct {
 	DropboxAppSecret   string `json:"dropbox_app_secret"`
 	DropboxAccessToken string `json:"dropbox_access_token"`
 
-	PushbulletAccessToken string `json:"pushbullet_access_token"`
-
 	TwitterSenderAccessToken       string `json:"twitter_sender_access_token"`
 	TwitterSenderAccessTokenSecret string `json:"twitter_sender_access_token_secret"`
 
-	PushoverToken string `json:"pushover_token"`
-	PushoverUser  string `json:"pushover_user"`
+	MediaArchiverPredefineUsers []string `json:"media_archiver_predefined_users"`
 
 	StorageName string `json:"storage_name"`
 
@@ -54,6 +51,7 @@ func LoadConfig() *Config {
 	check(errFile)
 	errJson := json.Unmarshal(data, &config)
 	check(errJson)
+
 	return &config
 }
 
@@ -108,7 +106,7 @@ func (c *Config) NewTweetRules() []rules.TweetRule {
 	{
 		const savePath = "/archive-temp"
 		a := c.NewStorageAccessor(savePath)
-		r := rules.NewMediaArchiver(a, c.DataSourceScreenName)
+		r := rules.NewMediaArchiver(a, c.DataSourceScreenName, c.MediaArchiverPredefineUsers)
 		rs = append(rs, r)
 	}
 	{
