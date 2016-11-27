@@ -26,16 +26,18 @@ func NewHitomiWatcher(myName string, accessor storages.Accessor) TweetRule {
 }
 
 func (d *HitomiWatcher) OnTweet(tweet *anaconda.Tweet) {
-	code := hitomiwatcher.FindReaderNumber(tweet.Text, time.Now())
-	if code < 0 {
+	codes := hitomiwatcher.FindReaderNumbers(tweet.Text, time.Now())
+	if len(codes) == 0 {
 		return
 	}
 
 	id := twutils.ProfitIdStr(tweet)
-	codestr := strconv.Itoa(code)
-	log.Printf("Hitomi Found Code %d, %s", code, id)
-	hitomiwatcher.FetchPreview(codestr, tweet, d.Accessor)
-	log.Printf("Hitomi Fetch Preview Complete %s", id)
+	for _, code := range codes {
+		codestr := strconv.Itoa(code)
+		log.Printf("Hitomi Found Code %d, %s", code, id)
+		hitomiwatcher.FetchPreview(codestr, tweet, d.Accessor)
+		log.Printf("Hitomi Fetch Preview Complete %s", id)
+	}
 }
 
 func (d *HitomiWatcher) OnFavorite(tweet *anaconda.EventTweet) {
@@ -44,16 +46,18 @@ func (d *HitomiWatcher) OnFavorite(tweet *anaconda.EventTweet) {
 	}
 
 	t := tweet.TargetObject
-	code := hitomiwatcher.FindReaderNumber(t.Text, time.Now())
-	if code < 0 {
+	codes := hitomiwatcher.FindReaderNumbers(t.Text, time.Now())
+	if len(codes) == 0 {
 		return
 	}
 
 	id := twutils.ProfitIdStr(t)
-	codestr := strconv.Itoa(code)
-	log.Printf("Hitomi Found Code %d, %s", code, id)
-	hitomiwatcher.FetchPreview(codestr, t, d.Accessor)
-	log.Printf("Hitomi Fetch Preview Complete %s", id)
+	for _, code := range codes {
+		codestr := strconv.Itoa(code)
+		log.Printf("Hitomi Found Code %d, %s", code, id)
+		hitomiwatcher.FetchPreview(codestr, t, d.Accessor)
+		log.Printf("Hitomi Fetch Preview Complete %s", id)
+	}
 }
 func (d *HitomiWatcher) OnEvent(ev string, event *anaconda.EventTweet) {
 	switch ev {

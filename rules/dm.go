@@ -114,7 +114,7 @@ func NewHitomiPreviewCommand(accessor storages.Accessor) LineCommand {
 	}
 }
 
-var reHitomiPreview = regexp.MustCompile(`^hitomi preview (\d{6})$`)
+var reHitomiPreview = regexp.MustCompile(`^hitomi preview (\d+)$`)
 
 func (c *HitomiPreviewCommand) match(text string) bool {
 	return reHitomiPreview.MatchString(text)
@@ -137,7 +137,7 @@ func (c *HitomiPreviewCommand) execute(text string, sender *senders.Sender) {
 }
 
 func (c *HitomiPreviewCommand) help() string {
-	return "hitomi preview 123456"
+	return "hitomi preview <hitomi_code>"
 }
 
 type StatusCommand struct {

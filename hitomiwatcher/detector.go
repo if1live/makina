@@ -12,15 +12,15 @@ const (
 	notFound = -1
 )
 
-func FindReaderNumber(text string, now time.Time) int {
+func FindReaderNumbers(text string, now time.Time) []int {
 	if len(text) == 0 {
-		return notFound
+		return nil
 	}
 
 	// 금지단어가 포함되어있는 경우
 	for _, w := range predefinedBlackListKeyword {
 		if strings.Contains(text, w) {
-			return notFound
+			return nil
 		}
 	}
 
@@ -34,42 +34,53 @@ func FindReaderNumber(text string, now time.Time) int {
 		return false
 	})
 
+	codes := []int{}
 	for _, word := range words {
 		if code := findReaderNumberFromText(word, now); code != notFound {
-			return code
+			codes = append(codes, code)
 		}
 	}
 
-	return notFound
+	if len(codes) == 0 {
+		return nil
+	}
+	return codes
 }
 
 // 7자리 숫자 or 5자리 이하 숫자는 패스
 // 그러면 6자리 관련 검사가 간단해진다
 var simpleIgnoreReList = []*regexp.Regexp{
-	regexp.MustCompile(`\d{7,}`),
-	regexp.MustCompile(`@.*\d{6}.*`),
-	regexp.MustCompile(`#.*\d{6}.*`),
+	// 히토미 코드 백만 진입
+	// 그래서 7자리 숫자도 허용해야한다
+	// 아니, 길이 제한이 의미 있을까?
+	//regexp.MustCompile(`\d{7,}`),
+	regexp.MustCompile(`@.*\d+.*`),
+	regexp.MustCompile(`#.*\d+.*`),
 
 	// 자주 쓰일거같은 postfix
-	regexp.MustCompile(`\d{6}초`),
-	regexp.MustCompile(`\d{6}분`),
-	regexp.MustCompile(`\d{6}시`),
-	regexp.MustCompile(`\d{6}번`),
-	regexp.MustCompile(`\d{6}명`),
-	regexp.MustCompile(`\d{6}원`),
-	regexp.MustCompile(`\d{6}시간`),
-	regexp.MustCompile(`\d{6}개`),
-	regexp.MustCompile(`\d{6}점`),
-	regexp.MustCompile(`\d{6}cm`),
-	regexp.MustCompile(`\d{6}m`),
-	regexp.MustCompile(`\d{6}km`),
-	regexp.MustCompile(`\d{6}点`),
-	regexp.MustCompile(`\d{6}GTB`),
+	regexp.MustCompile(`\d+초`),
+	regexp.MustCompile(`\d+분`),
+	regexp.MustCompile(`\d+시`),
+	regexp.MustCompile(`\d+번`),
+	regexp.MustCompile(`\d+명`),
+	regexp.MustCompile(`\d+원`),
+	regexp.MustCompile(`\d+시간`),
+	regexp.MustCompile(`\d+개`),
+	regexp.MustCompile(`\d+점`),
+	regexp.MustCompile(`\d+cm`),
+	regexp.MustCompile(`\d+m`),
+	regexp.MustCompile(`\d+km`),
+	regexp.MustCompile(`\d+pt`),
+	regexp.MustCompile(`\d+点`),
+	regexp.MustCompile(`\d+GTB`),
 }
 
-var reGallery = regexp.MustCompile(`/galleries/(\d{6}).html`)
-var reReader = regexp.MustCompile(`/reader/(\d{6}).html`)
-var reValidCode = regexp.MustCompile(`([1-9]\d{5})`)
+var reGallery = regexp.MustCompile(`/galleries/(\d+).html`)
+var reReader = regexp.MustCompile(`/reader/(\d+).html`)
+
+// 실제 히토미 코드는 한자리수도 존재하지만 5자리 코드부터 허용
+// 작은 숫자를 허용하면 얻는것에 비해서 쓸데없는 메세지도 코드로 인식할거같아서
+var reValidCode = regexp.MustCompile(`(\d{5,})`)
 
 var predefinedBlackList = []string{
 	// 2**n 중 6자리 숫자 제외
@@ -128,21 +139,8 @@ func findReaderNumberFromText(word string, now time.Time) int {
 	blacklist := make([]string, len(predefinedBlackList))
 	copy(blacklist, predefinedBlackList)
 
-	if len(word) < 6 {
-		return notFound
-	}
-
-	if len(word) == 6 {
-		if ok := filterBlacklist(word, blacklist); !ok {
-			return notFound
-		}
-		if ok := filterRecentDate(word, now); !ok {
-			return notFound
-		}
-		if m := reValidCode.MatchString(word); m {
-			val, _ := strconv.Atoi(word)
-			return val
-		}
+	// 5자리 숫자까진 허용
+	if len(word) < 5 {
 		return notFound
 	}
 
@@ -170,14 +168,21 @@ func findReaderNumberFromText(word string, now time.Time) int {
 	}
 
 	for _, m := range reValidCode.FindAllStringSubmatch(word, -1) {
-		if ok := filterBlacklist(m[1], blacklist); !ok {
+		s := m[1]
+		if ok := filterBlacklist(s, blacklist); !ok {
 			return notFound
 		}
-		if ok := filterRecentDate(m[1], now); !ok {
+		if ok := filterRecentDate(s, now); !ok {
+			return notFound
+		}
+		// 숫자의 맨 앞자리가 0인것은 제외
+		// 정규식으로 짜르려고했는데 잘 안되서 그냥 후처리로 대응했다
+		// 문제있던거 : 012345 를 [1-9]\d+ 로 잡으면 12345가 잡히더라
+		if s[0] == '0' {
 			return notFound
 		}
 
-		val, _ := strconv.Atoi(m[1])
+		val, _ := strconv.Atoi(s)
 		return val
 	}
 
