@@ -64,6 +64,7 @@ var simpleIgnoreReList = []*regexp.Regexp{
 	regexp.MustCompile(`\d+번`),
 	regexp.MustCompile(`\d+명`),
 	regexp.MustCompile(`\d+원`),
+	regexp.MustCompile(`\d+밖`),
 	regexp.MustCompile(`\d+시간`),
 	regexp.MustCompile(`\d+개`),
 	regexp.MustCompile(`\d+점`),
