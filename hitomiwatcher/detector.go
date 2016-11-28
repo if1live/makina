@@ -59,6 +59,7 @@ var simpleIgnoreReList = []*regexp.Regexp{
 
 	// 자주 쓰일거같은 postfix
 	regexp.MustCompile(`\d+번`),
+	regexp.MustCompile(`\d+회`),
 	regexp.MustCompile(`\d+명`),
 	regexp.MustCompile(`\d+밖`),
 	regexp.MustCompile(`\d+개`),
