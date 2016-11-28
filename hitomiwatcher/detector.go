@@ -58,22 +58,34 @@ var simpleIgnoreReList = []*regexp.Regexp{
 	regexp.MustCompile(`#.*\d+.*`),
 
 	// 자주 쓰일거같은 postfix
-	regexp.MustCompile(`\d+초`),
-	regexp.MustCompile(`\d+분`),
-	regexp.MustCompile(`\d+시`),
 	regexp.MustCompile(`\d+번`),
 	regexp.MustCompile(`\d+명`),
-	regexp.MustCompile(`\d+원`),
 	regexp.MustCompile(`\d+밖`),
-	regexp.MustCompile(`\d+시간`),
 	regexp.MustCompile(`\d+개`),
+	regexp.MustCompile(`\d+GTB`),
+
+	// 게임용어?
 	regexp.MustCompile(`\d+점`),
+	regexp.MustCompile(`\d+위`),
+	regexp.MustCompile(`\d+pt`),
+	regexp.MustCompile(`\d+Pt`),
+	regexp.MustCompile(`\d+点`),
+
+	// 거리
 	regexp.MustCompile(`\d+cm`),
 	regexp.MustCompile(`\d+m`),
 	regexp.MustCompile(`\d+km`),
-	regexp.MustCompile(`\d+pt`),
-	regexp.MustCompile(`\d+点`),
-	regexp.MustCompile(`\d+GTB`),
+
+	// 시간
+	regexp.MustCompile(`\d+시간`),
+	regexp.MustCompile(`\d+초`),
+	regexp.MustCompile(`\d+분`),
+	regexp.MustCompile(`\d+시`),
+
+	// 금액
+	regexp.MustCompile(`\d+원`),
+	regexp.MustCompile(`\d+엔`),
+	regexp.MustCompile(`\d+달러`),
 }
 
 var reGallery = regexp.MustCompile(`/galleries/(\d+).html`)
@@ -106,6 +118,8 @@ var predefinedBlackListKeyword = []string{
 
 	// 설마 이런 문자가 끼겠어?
 	"%",
+	"_",
+	"-",
 }
 
 func filterBlacklist(word string, blacklist []string) bool {
