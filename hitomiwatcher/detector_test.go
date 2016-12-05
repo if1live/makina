@@ -51,7 +51,6 @@ func TestFindReaderNumber(t *testing.T) {
 
 		// black list
 		{"131072", nil},
-		{"234567", nil},
 		{"「導」70%「嘘」15%「夜」15% ポイント:95pt ランキング:366545位", nil},
 
 		// mention + hash
@@ -95,7 +94,7 @@ func TestFindReaderNumber(t *testing.T) {
 	for _, c := range cases {
 		actual := FindReaderNumbers(c.text, now)
 		if !reflect.DeepEqual(c.num, actual) {
-			t.Errorf("FindReaderNumber - input : %s, expected %d, got %d, [%s]", c.text, c.num, actual, c.text)
+			t.Errorf("FindReaderNumber - input : %s, expected %d, got %d", c.text, c.num, actual)
 		}
 	}
 }
