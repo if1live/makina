@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 
+	raven "github.com/getsentry/raven-go"
 	"github.com/kardianos/osext"
 	"gopkg.in/yaml.v2"
 )
@@ -75,6 +76,7 @@ func (c *Local) UploadBytes(data []byte, dst string) error {
 
 	file, err := os.OpenFile(filepath, os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		panic(err)
 	}
 	file.Write(data)

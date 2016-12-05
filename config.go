@@ -128,3 +128,13 @@ func (c *Config) NewMessageRules() []rules.MessageRule {
 	}
 	return rs
 }
+
+func (c *Config) NewDaemonRules() []rules.DaemonRule {
+	sender := c.MakeSender(c.SenderCategory)
+	rs := []rules.DaemonRule{}
+	{
+		r := rules.NewPageWatcher(sender)
+		rs = append(rs, r)
+	}
+	return rs
+}

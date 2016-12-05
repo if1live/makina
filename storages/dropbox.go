@@ -9,6 +9,7 @@ import (
 
 	yaml "gopkg.in/yaml.v2"
 
+	raven "github.com/getsentry/raven-go"
 	dropbox "github.com/tj/go-dropbox"
 	dropy "github.com/tj/go-dropy"
 )
@@ -31,6 +32,7 @@ func NewDropbox(rootpath string, token string) *Dropbox {
 
 func check(e error) {
 	if e != nil {
+		raven.CaptureErrorAndWait(e, nil)
 		panic(e)
 	}
 }

@@ -12,6 +12,8 @@ import (
 
 	"net/url"
 
+	"time"
+
 	"github.com/ChimeraCoder/anaconda"
 	raven "github.com/getsentry/raven-go"
 )
@@ -60,19 +62,29 @@ func mainDevel(config *Config) {
 
 func mainDefault(config *Config) {
 	go mainServer(config)
+	go mainDaemon(config)
 	go mainDirectMessageStreaming(config)
 	mainStreaming(config)
 }
 
+func mainDaemon(config *Config) {
+	rs := config.NewDaemonRules()
+	for _, r := range rs {
+		go r.Execute()
+	}
+}
+
 func mainServer(config *Config) {
 	type Status struct {
-		Ok bool `json:"ok"`
+		Ok  bool      `json:"ok"`
+		Now time.Time `json:"now"`
 	}
 	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
 		status := Status{
-			true,
+			Ok:  true,
+			Now: time.Now(),
 		}
 		data, _ := json.Marshal(status)
 		var out bytes.Buffer

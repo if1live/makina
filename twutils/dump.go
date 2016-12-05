@@ -8,12 +8,14 @@ import (
 	"os"
 
 	"github.com/ChimeraCoder/anaconda"
+	raven "github.com/getsentry/raven-go"
 )
 
 func LoadTweetJsonFile(filepath string) anaconda.Tweet {
 	// https://gist.github.com/border/775526
 	file, e := ioutil.ReadFile(filepath)
 	if e != nil {
+		raven.CaptureErrorAndWait(e, nil)
 		panic(e)
 	}
 
@@ -25,6 +27,7 @@ func LoadTweetJsonFile(filepath string) anaconda.Tweet {
 func SaveTweetJsonFile(t *anaconda.Tweet, filepath string) {
 	b, err := json.Marshal(t)
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		panic(err)
 	}
 
@@ -33,6 +36,7 @@ func SaveTweetJsonFile(t *anaconda.Tweet, filepath string) {
 
 	f, err := os.Create(filepath)
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		panic(err)
 	}
 

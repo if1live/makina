@@ -10,3 +10,7 @@ type TweetRule interface {
 type MessageRule interface {
 	OnDirectMessage(dm *anaconda.DirectMessage)
 }
+
+type DaemonRule interface {
+	Execute()
+}

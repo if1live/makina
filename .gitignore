@@ -42,3 +42,4 @@ config.json
 # saved files
 user-*
 media-*
+_cache*

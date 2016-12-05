@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/ChimeraCoder/anaconda"
+	raven "github.com/getsentry/raven-go"
 )
 
 type DirectMessageSendStrategy struct {
@@ -29,6 +30,7 @@ func (s *DirectMessageSendStrategy) Send(title, body string) {
 	content := makeContent(title, body)
 	_, err := s.api.PostDMToScreenName(content, s.myName)
 	if err != nil {
+		raven.CaptureErrorAndWait(err, nil)
 		panic(err)
 	}
 }

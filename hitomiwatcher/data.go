@@ -56,6 +56,7 @@ var notAllowedSuffixList = []string{
 
 	// 글쎼?
 	"세대",
+	"가루",
 
 	// 특수문자
 	"%",
