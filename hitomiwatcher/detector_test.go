@@ -1,10 +1,28 @@
 package hitomiwatcher
 
 import (
+	"io/ioutil"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
+
+func TestFindReaderNumber_Skip(t *testing.T) {
+	filename := "testcase-skip.txt"
+	dat, _ := ioutil.ReadFile(filename)
+	lines := strings.Split(string(dat), "\n")
+	for i, line := range lines {
+		lines[i] = strings.Replace(line, "\r", "", -1)
+	}
+	now := time.Now()
+	for _, c := range lines {
+		actual := FindReaderNumbers(c, now)
+		if actual != nil {
+			t.Errorf("TestFindReaderNumber_Skip - input : %s, expected nil, got %d", c, actual)
+		}
+	}
+}
 
 func TestFindReaderNumber(t *testing.T) {
 	cases := []struct {
@@ -44,22 +62,8 @@ func TestFindReaderNumber(t *testing.T) {
 		{"가123456", []int{123456}},
 		{"가123456가", []int{123456}},
 
-		{"이거 4728472782번 들었는데", nil},
-		{"이거 123456번 들었는데", nil},
-
-		{"abc 123456시간 테스트", nil},
-
 		// black list
 		{"131072", nil},
-		{"「導」70%「嘘」15%「夜」15% ポイント:95pt ランキング:366545位", nil},
-
-		// mention + hash
-		{"@0c442e114489450", nil},
-		{"@123456", nil},
-		{"@123456_", nil},
-		{"@_123456", nil},
-		{"@_123456_", nil},
-		{"#hash_161030", nil},
 
 		// url
 		{"http://foo.bar/299292", nil},
@@ -71,15 +75,6 @@ func TestFindReaderNumber(t *testing.T) {
 		{"https://hitomi.la/reader/1.html", []int{1}},
 		{"https://hitomi.la/reader/123456.html", []int{123456}},
 		{"https://hitomi.la/reader/1234567.html", []int{1234567}},
-
-		// 시간으로는 쓰일지 모른다
-		{"분으로는 100800분 초로는 604800초", nil},
-		{"650000개", nil},
-		{"115000원", nil},
-		{"！720710点", nil},
-
-		{"110-111-111111 신한은행입니다.", nil},
-		{"하나은행도 있어요. 109 111111 11111", nil},
 
 		// 날짜처럼 생기면 무시
 		// 1년에 365일, 최근 2년만 씹어도 별 문제 없을테니까

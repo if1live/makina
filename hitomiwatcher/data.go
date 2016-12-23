@@ -7,9 +7,15 @@ var notAllowedPrefixList = []string{
 
 	// 특수문자
 	"-",
+	"_",
 	"+",
-	"$",
 	"\\",
+	"/",
+
+	// 통화
+	"₩",
+	"$",
+	"円",
 }
 
 /* 대소문자 무시 */
@@ -21,21 +27,44 @@ var notAllowedSuffixList = []string{
 	"밖",
 	"개",
 	"배",
-	"GTB",
+	"권",
+	"짜리",
+	"알",
+	"gtb",
 
-	// 게임용어?
+	"에",
+	"로",
+	"으로",
+	"이었",
+	"이엇",
+	"였",
+
+	"트윗",
+	"블락",
+	"팔로",
+	"정도",
+	"rt",
+	"알티",
+
 	"점",
 	"위",
 	"pt",
 	"렙",
+	"뎀",
 	"레벨",
+	"포인트",
 
-	// 자주 쓰이는 한자
+	// 자주 쓰이는 외국어
 	"点",
 	"個",
 	"回",
 	"人",
 	"位",
+	"日",
+	"の",
+	"フ",
+	"α",
+	"β",
 
 	// 거리
 	"cm",
@@ -63,6 +92,7 @@ var notAllowedSuffixList = []string{
 	"_",
 	"-",
 	"+",
+	"/",
 }
 
 var predefinedBlackListKeyword = []string{
@@ -72,6 +102,16 @@ var predefinedBlackListKeyword = []string{
 	"신한",
 	"하나",
 	"국민",
+
+	"일러스트",
+	"팝픈",
+	"주식",
+	"해금",
+	"빌드",
+	"체력",
+	"방어",
+	"test",
+	"테스트",
 }
 
 var notAllowedCodes = []string{

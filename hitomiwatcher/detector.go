@@ -1,7 +1,6 @@
 package hitomiwatcher
 
 import (
-	"fmt"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -18,16 +17,18 @@ func FindReaderNumbers(text string, now time.Time) []int {
 		return nil
 	}
 
+	lowertext := strings.ToLower(text)
+
 	// 금지단어가 포함되어있는 경우
 	for _, w := range predefinedBlackListKeyword {
-		if strings.Contains(text, w) {
+		if strings.Contains(lowertext, w) {
 			return nil
 		}
 	}
 
 	// 공백문자로 쪼갠후 검사. 6자리 숫자는 한 단어 들어갈테니까
 	// https://play.golang.org/p/cLHpRxZQiG
-	words := strings.FieldsFunc(text, func(r rune) bool {
+	words := strings.FieldsFunc(lowertext, func(r rune) bool {
 		switch r {
 		case ' ', '\n', '\t':
 			return true
@@ -118,9 +119,9 @@ func findReaderNumberFromWord(word string, now time.Time) int {
 	}
 
 	for _, m := range reValidCode.FindAllStringSubmatch(word, -1) {
-		prefix := strings.ToLower(m[1])
-		s := strings.ToLower(m[2])
-		suffix := strings.ToLower(m[3])
+		prefix := m[1]
+		s := m[2]
+		suffix := m[3]
 
 		for _, notAllowedPrefix := range notAllowedPrefixList {
 			if strings.HasSuffix(prefix, notAllowedPrefix) {
@@ -143,7 +144,7 @@ func findReaderNumberFromWord(word string, now time.Time) int {
 			return notFound
 		}
 
-		fmt.Println(prefix, s, suffix)
+		//fmt.Println(prefix, s, suffix)
 		val, _ := strconv.Atoi(s)
 		return val
 	}
