@@ -116,7 +116,7 @@ func mainStreaming(config *Config) {
 		switch tweet := x.(type) {
 		case anaconda.Tweet:
 			for _, h := range handlers {
-				go h.OnTweet(&tweet)
+				h.OnTweet(&tweet)
 			}
 		case anaconda.StatusDeletionNotice:
 			// pass
@@ -125,7 +125,7 @@ func mainStreaming(config *Config) {
 		case anaconda.EventTweet:
 			evt := tweet.Event.Event
 			for _, h := range handlers {
-				go h.OnEvent(evt, &tweet)
+				h.OnEvent(evt, &tweet)
 			}
 		case anaconda.DirectMessage:
 			// pass

@@ -1,4 +1,4 @@
-package hitomiwatcher
+package main
 
 import (
 	"io/ioutil"
@@ -9,7 +9,7 @@ import (
 )
 
 func TestFindReaderNumber_Skip(t *testing.T) {
-	filename := "testcase-skip.txt"
+	filename := "testdata/hitomidetector-testcase-skip.txt"
 	dat, _ := ioutil.ReadFile(filename)
 	lines := strings.Split(string(dat), "\n")
 	for i, line := range lines {

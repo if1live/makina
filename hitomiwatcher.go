@@ -1,4 +1,4 @@
-package rules
+package main
 
 import (
 	"log"
@@ -7,35 +7,32 @@ import (
 	"strconv"
 
 	"github.com/ChimeraCoder/anaconda"
-	"github.com/if1live/makina/hitomiwatcher"
-	"github.com/if1live/makina/storages"
-	"github.com/if1live/makina/twutils"
 )
 
 type HitomiWatcher struct {
-	MyName   string
-	Accessor storages.Accessor
+	MyName  string
+	storage *Storage
 }
 
-func NewHitomiWatcher(myName string, accessor storages.Accessor) TweetRule {
+func NewHitomiWatcher(myName string, storage *Storage) TweetRule {
 	detector := &HitomiWatcher{
-		MyName:   myName,
-		Accessor: accessor,
+		MyName:  myName,
+		storage: storage,
 	}
 	return detector
 }
 
 func (d *HitomiWatcher) OnTweet(tweet *anaconda.Tweet) {
-	codes := hitomiwatcher.FindReaderNumbers(tweet.Text, time.Now())
+	codes := FindReaderNumbers(tweet.Text, time.Now())
 	if len(codes) == 0 {
 		return
 	}
 
-	id := twutils.ProfitIdStr(tweet)
+	id := MakeOriginIdStr(tweet)
 	for _, code := range codes {
 		codestr := strconv.Itoa(code)
 		log.Printf("Hitomi Found Code %d, %s", code, id)
-		hitomiwatcher.FetchPreview(codestr, tweet, d.Accessor)
+		FetchHitomiPreview(codestr, tweet, d.storage)
 		log.Printf("Hitomi Fetch Preview Complete %s", id)
 	}
 }
@@ -46,16 +43,16 @@ func (d *HitomiWatcher) OnFavorite(tweet *anaconda.EventTweet) {
 	}
 
 	t := tweet.TargetObject
-	codes := hitomiwatcher.FindReaderNumbers(t.Text, time.Now())
+	codes := FindReaderNumbers(t.Text, time.Now())
 	if len(codes) == 0 {
 		return
 	}
 
-	id := twutils.ProfitIdStr(t)
+	id := MakeOriginIdStr(t)
 	for _, code := range codes {
 		codestr := strconv.Itoa(code)
 		log.Printf("Hitomi Found Code %d, %s", code, id)
-		hitomiwatcher.FetchPreview(codestr, t, d.Accessor)
+		FetchHitomiPreview(codestr, t, d.storage)
 		log.Printf("Hitomi Fetch Preview Complete %s", id)
 	}
 }

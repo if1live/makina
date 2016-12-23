@@ -34,7 +34,9 @@ sample-tweet.json
 .env
 
 # config
-config.json
+config.yaml
+config.service.yaml
+config.devel.yaml
 
 # log
 *.log

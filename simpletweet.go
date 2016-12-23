@@ -1,4 +1,4 @@
-package twutils
+package main
 
 import (
 	"fmt"
@@ -13,6 +13,7 @@ type SimpleTweet struct {
 	Text       string `yaml:"text"`
 	URL        string `yaml:"url"`
 	CreatedAt  string `yaml:"created_at"`
+    Extra      string `yaml:"extra"`
 }
 
 func NewSimpleTweet(t *anaconda.Tweet) SimpleTweet {
@@ -29,5 +30,6 @@ func NewSimpleTweet(t *anaconda.Tweet) SimpleTweet {
 		UserName:   t.User.Name,
 		URL:        url,
 		CreatedAt:  t.CreatedAt,
+        Extra:      "",
 	}
 }

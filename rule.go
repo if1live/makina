@@ -1,4 +1,4 @@
-package rules
+package main
 
 import "github.com/ChimeraCoder/anaconda"
 

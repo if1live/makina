@@ -1,4 +1,4 @@
-package rules
+package main
 
 import (
 	"log"
@@ -6,23 +6,20 @@ import (
 	"strings"
 
 	"github.com/ChimeraCoder/anaconda"
-	"github.com/if1live/makina/storages"
-	"github.com/if1live/makina/twutils"
 )
 
 type MediaArchiver struct {
-	accessor        storages.Accessor
+	storage         *Storage
 	myName          string
 	predefinedUsers []string
 }
 
-func NewMediaArchiver(accessor storages.Accessor, myName string, users []string) TweetRule {
-	archiver := &MediaArchiver{
-		accessor:        accessor,
+func NewMediaArchiver(storage *Storage, myName string, users []string) TweetRule {
+	return &MediaArchiver{
+		storage:         storage,
 		myName:          myName,
 		predefinedUsers: users,
 	}
-	return archiver
 }
 
 func (ar *MediaArchiver) OnTweet(tweet *anaconda.Tweet) {
@@ -30,8 +27,8 @@ func (ar *MediaArchiver) OnTweet(tweet *anaconda.Tweet) {
 		return
 	}
 
-	if tweet.User.ScreenName == ar.myName && tweet.RetweetedStatus.User.ScreenName != ar.myName {
-		ar.handleTweet(tweet, ar.accessor, "media-retweet")
+	if tweet.User.ScreenName == ar.myName {
+		ar.handleTweet(tweet, ar.storage, "media-retweet")
 	}
 }
 
@@ -51,33 +48,46 @@ func (ar *MediaArchiver) OnFavorite(tweet *anaconda.EventTweet) {
 		return
 	}
 	t := tweet.TargetObject
-	ar.handleTweet(t, ar.accessor, "media-favorite")
+	ar.handleTweet(t, ar.storage, "media-favorite")
 }
 
-func (ar *MediaArchiver) handleTweet(tweet *anaconda.Tweet, accessor storages.Accessor, dir string) {
-	if tweet == nil {
-		return
-	}
-	if len(tweet.ExtendedEntities.Media) == 0 {
+func (ar *MediaArchiver) handleTweet(tweet *anaconda.Tweet, storage *Storage, dir string) {
+	if !ar.SaveRequired(tweet) {
 		return
 	}
 
+	writerScreenName := MakeOriginScreenName(tweet)
+	category := ar.FindCategory(dir, writerScreenName)
+
+	id := MakeOriginIdStr(tweet)
+	log.Printf("Media Archive %s : %s, %s\n", category, id, tweet.Text)
+	storage.ArchiveTweet(tweet, category)
+	log.Printf("MediaArchiver Complete %s", id)
+}
+
+func (ar *MediaArchiver) SaveRequired(tweet *anaconda.Tweet) bool {
+	if tweet == nil {
+		return false
+	}
+	if len(tweet.ExtendedEntities.Media) == 0 {
+		return false
+	}
+	return true
+}
+func (ar *MediaArchiver) FindCategory(dir, writerScreenName string) string {
 	// 기본 카테고리는 tweet or favorite
 	// 더 좋은 카테고리가 있을떄 교체하는 식으로 동작한다
 	category := dir
 
+	name := strings.ToLower(writerScreenName)
 	for _, user := range ar.predefinedUsers {
 		// 트위터 계정명은 대소문자를 구분하지 않더라
 		s1 := strings.ToLower(user)
-		s2 := strings.ToLower(twutils.ProfitScreenName(tweet))
-		if s1 == s2 {
+		if s1 == name {
 			category = "user-" + user
 			break
 		}
 	}
 
-	id := twutils.ProfitIdStr(tweet)
-	log.Printf("Media Archive %s : %s, %s\n", category, id, tweet.Text)
-	twutils.ArchiveMedia(tweet, accessor, category)
-	log.Printf("MediaArchiver Complete %s", id)
+	return category
 }

@@ -1,4 +1,4 @@
-package hitomiwatcher
+package main
 
 import (
 	"net/url"

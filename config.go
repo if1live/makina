@@ -1,15 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"io/ioutil"
-
 	"path"
 
 	"github.com/ChimeraCoder/anaconda"
-	"github.com/if1live/makina/rules"
-	"github.com/if1live/makina/senders"
-	"github.com/if1live/makina/storages"
+	"gopkg.in/yaml.v2"
 )
 
 type TwitterAuthConfig struct {
@@ -20,71 +16,56 @@ type TwitterAuthConfig struct {
 }
 
 type Config struct {
-	DataSourceConsumerKey       string `json:"data_source_consumer_key"`
-	DataSourceConsumerSecret    string `json:"data_source_consumer_secret"`
-	DataSourceAccessToken       string `json:"data_source_access_token"`
-	DataSourceAccessTokenSecret string `json:"data_source_access_token_secret"`
-	DataSourceScreenName        string `json:"data_source_screen_name"`
+	DataSourceConsumerKey       string `yaml:"data_source_consumer_key"`
+	DataSourceConsumerSecret    string `yaml:"data_source_consumer_secret"`
+	DataSourceAccessToken       string `yaml:"data_source_access_token"`
+	DataSourceAccessTokenSecret string `yaml:"data_source_access_token_secret"`
+	DataSourceScreenName        string `yaml:"data_source_screen_name"`
 
-	DropboxAppKey      string `json:"dropbox_app_key"`
-	DropboxAppSecret   string `json:"dropbox_app_secret"`
-	DropboxAccessToken string `json:"dropbox_access_token"`
+	DropboxAccessToken string `yaml:"dropbox_access_token"`
 
-	TwitterSenderAccessToken       string `json:"twitter_sender_access_token"`
-	TwitterSenderAccessTokenSecret string `json:"twitter_sender_access_token_secret"`
+	TwitterSenderAccessToken       string `yaml:"twitter_sender_access_token"`
+	TwitterSenderAccessTokenSecret string `yaml:"twitter_sender_access_token_secret"`
 
-	MediaArchiverPredefineUsers []string `json:"media_archiver_predefined_users"`
+	MediaArchiverPredefineUsers []string `yaml:"media_archiver_predefined_users"`
 
-	StorageName string `json:"storage_name"`
-
-	SenderCategory string `json:"sender_category"`
-
-	SentryDSN string `json:"sentry_dsn"`
+	SentryDSN string `yaml:"sentry_dsn"`
 }
 
 func LoadConfig() *Config {
-	filename := "config.json"
+	filename := "config.yaml"
 	filepath := path.Join(GetExecutablePath(), filename)
 
 	var config Config
-	data, errFile := ioutil.ReadFile(filepath)
-	check(errFile)
-	errJson := json.Unmarshal(data, &config)
-	check(errJson)
+	data, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return &Config{}
+	}
+
+	err = yaml.Unmarshal(data, &config)
+	if err != nil {
+		return &Config{}
+	}
 
 	return &config
 }
 
-func (config *Config) NewDataSourceAuthConfig() *TwitterAuthConfig {
+func (c *Config) NewDataSourceAuthConfig() *TwitterAuthConfig {
 	return &TwitterAuthConfig{
-		config.DataSourceConsumerKey,
-		config.DataSourceConsumerSecret,
-		config.DataSourceAccessToken,
-		config.DataSourceAccessTokenSecret,
+		c.DataSourceConsumerKey,
+		c.DataSourceConsumerSecret,
+		c.DataSourceAccessToken,
+		c.DataSourceAccessTokenSecret,
 	}
 }
 
-func (config *Config) NewStorageAccessor(rootpath string) storages.Accessor {
-	switch config.StorageName {
-	case "local":
-		return storages.NewLocal()
-	case "dropbox":
-		return storages.NewDropbox(rootpath, config.DropboxAccessToken)
-	default:
-		return nil
-	}
+func (c *Config) NewStorage(rootpath string) *Storage {
+	return NewStorage(rootpath, c.DropboxAccessToken)
 }
 
-func (config *Config) MakeSender(category string) *senders.Sender {
-	switch category {
-	case "dm":
-		api := config.CreateTwitterSenderApi()
-		s := senders.NewDirectMessage(api, config.DataSourceScreenName)
-		return senders.New(s)
-	default:
-		s := senders.NewFake()
-		return senders.New(s)
-	}
+func (c *Config) MakeSender() Sender {
+	api := config.CreateTwitterSenderApi()
+	return NewSender(api, config.DataSourceScreenName)
 }
 
 func (config *TwitterAuthConfig) CreateApi() *anaconda.TwitterApi {
@@ -101,40 +82,35 @@ func (c *Config) CreateTwitterSenderApi() *anaconda.TwitterApi {
 	return api
 }
 
-func (c *Config) NewTweetRules() []rules.TweetRule {
-	rs := []rules.TweetRule{}
+func (c *Config) NewTweetRules() []TweetRule {
+	rs := []TweetRule{}
 	{
 		const savePath = "/archive-temp"
-		a := c.NewStorageAccessor(savePath)
-		r := rules.NewMediaArchiver(a, c.DataSourceScreenName, c.MediaArchiverPredefineUsers)
+		a := c.NewStorage(savePath)
+		r := NewMediaArchiver(a, c.DataSourceScreenName, c.MediaArchiverPredefineUsers)
 		rs = append(rs, r)
 	}
 	{
 		const savePath = "/hitomi-temp"
-		a := c.NewStorageAccessor(savePath)
-		r := rules.NewHitomiWatcher(c.DataSourceScreenName, a)
+		a := c.NewStorage(savePath)
+		r := NewHitomiWatcher(c.DataSourceScreenName, a)
 		rs = append(rs, r)
 	}
 	return rs
 }
-func (c *Config) NewMessageRules() []rules.MessageRule {
-	sender := c.MakeSender(c.SenderCategory)
-	rs := []rules.MessageRule{}
+func (c *Config) NewMessageRules() []MessageRule {
+	sender := c.MakeSender()
+	rs := []MessageRule{}
 	{
 		const savePath = "/dm-temp"
-		a := c.NewStorageAccessor(savePath)
-		r := rules.NewDirectMessageWatcher(c.DataSourceScreenName, a, sender)
+		a := c.NewStorage(savePath)
+		r := NewDirectMessageWatcher(c.DataSourceScreenName, a, sender)
 		rs = append(rs, r)
 	}
 	return rs
 }
 
-func (c *Config) NewDaemonRules() []rules.DaemonRule {
-	sender := c.MakeSender(c.SenderCategory)
-	rs := []rules.DaemonRule{}
-	{
-		r := rules.NewPageWatcher(sender)
-		rs = append(rs, r)
-	}
+func (c *Config) NewDaemonRules() []DaemonRule {
+	rs := []DaemonRule{}
 	return rs
 }
