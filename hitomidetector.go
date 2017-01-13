@@ -58,6 +58,24 @@ func filterBlacklist(word string, blacklist []string) bool {
 	return true
 }
 
+func filterFullDate(word string) bool {
+	// 20170102 규격에 맞아 떨어지면 무시
+	// 무시할 년도 미리 지정. 설마 makina가 5년씩 돌아가겠어?
+	ignoreYears := []int{
+		2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022,
+	}
+	t, err := time.Parse("20060102", word)
+	if err != nil {
+		return true
+	}
+	for _, year := range ignoreYears {
+		if t.Year() == year {
+			return false
+		}
+	}
+	return true
+}
+
 func filterRecentDate(word string, now time.Time) bool {
 	t, err := time.Parse("060102", word)
 	if err != nil {
@@ -138,6 +156,9 @@ func findReaderNumberFromWord(word string, now time.Time) int {
 			if s == notAllowed {
 				return notFound
 			}
+		}
+		if ok := filterFullDate(s); !ok {
+			return notFound
 		}
 
 		if ok := filterRecentDate(s, now); !ok {
