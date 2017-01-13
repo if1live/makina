@@ -97,6 +97,7 @@ func (s *Storage) ArchiveTweet(tweet *anaconda.Tweet, dir string) {
 
 	resp, e := s.UploadMetadata(tweet, dir, now)
 	if e != nil {
+		raven.CaptureErrorAndWait(e, nil)
 		log.Fatalf("Save Tweet Fail! %s -> %s, [%s]", resp.ID, resp.FileName, e.Error())
 	} else {
 		log.Printf("Save Tweet %s -> %s", resp.ID, resp.FileName)
@@ -108,6 +109,7 @@ func (s *Storage) ArchiveTweet(tweet *anaconda.Tweet, dir string) {
 		filename = path.Join(dir, filename)
 		err := s.UploadBytes(resp.Data, filename)
 		if err != nil {
+			raven.CaptureErrorAndWait(e, nil)
 			log.Fatalf("Save Image Fail! %s -> %s, [%s]", id, filename, err.Error())
 		} else {
 			log.Printf("Save Image %s -> %s", id, filename)
