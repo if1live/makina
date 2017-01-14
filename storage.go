@@ -10,6 +10,8 @@ import (
 	"path"
 	"time"
 
+	"io"
+
 	"github.com/ChimeraCoder/anaconda"
 	raven "github.com/getsentry/raven-go"
 	"github.com/kardianos/osext"
@@ -98,7 +100,7 @@ func (s *Storage) ArchiveTweet(tweet *anaconda.Tweet, dir string) {
 	resp, e := s.UploadMetadata(tweet, dir, now)
 	if e != nil {
 		raven.CaptureErrorAndWait(e, nil)
-		log.Fatalf("Save Tweet Fail! %s -> %s, [%s]", resp.ID, resp.FileName, e.Error())
+		log.Panicf("Save Tweet Fail! %s -> %s, [%s]", resp.ID, resp.FileName, e.Error())
 	} else {
 		log.Printf("Save Tweet %s -> %s", resp.ID, resp.FileName)
 	}
@@ -110,7 +112,7 @@ func (s *Storage) ArchiveTweet(tweet *anaconda.Tweet, dir string) {
 		err := s.UploadBytes(resp.Data, filename)
 		if err != nil {
 			raven.CaptureErrorAndWait(e, nil)
-			log.Fatalf("Save Image Fail! %s -> %s, [%s]", id, filename, err.Error())
+			log.Panicf("Save Image Fail! %s -> %s, [%s]", id, filename, err.Error())
 		} else {
 			log.Printf("Save Image %s -> %s", id, filename)
 		}
@@ -172,19 +174,34 @@ func newDropbox(rootpath string, token string) storageStrategy {
 	}
 }
 
+func (c *dropboxStorageStrategy) now() time.Time {
+	localnow := time.Now()
+	utcnow := localnow.UTC()
+	t := time.Date(utcnow.Year(), utcnow.Month(), utcnow.Day(), utcnow.Hour(), utcnow.Minute(), utcnow.Second(), 0, time.UTC)
+	return t
+}
+
 func (c *dropboxStorageStrategy) UploadBytes(data []byte, dst string) error {
 	r := bytes.NewReader(data)
+	return c.UploadReader(r, dst)
+}
+
+func (c *dropboxStorageStrategy) UploadReader(r io.Reader, dst string) error {
 	uploadFilePath := path.Join(c.RootPath, dst)
-	err := c.client.Upload(uploadFilePath, r)
+	_, err := c.client.Files.Upload(&dropbox.UploadInput{
+		Mode:           dropbox.WriteModeAdd,
+		Path:           uploadFilePath,
+		Reader:         r,
+		Mute:           true,
+		ClientModified: c.now(),
+	})
 	return err
 }
 
 func (c *dropboxStorageStrategy) UploadFile(src string, dst string) error {
-	uploadFilePath := path.Join(c.RootPath, dst)
 	file, _ := os.Open(src)
 	r := bufio.NewReader(file)
-	err := c.client.Upload(uploadFilePath, r)
-	return err
+	return c.UploadReader(r, dst)
 }
 
 func (c *dropboxStorageStrategy) Mkdir(dirname string) {
