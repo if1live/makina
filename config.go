@@ -102,9 +102,7 @@ func (c *Config) NewMessageRules() []MessageRule {
 	sender := c.MakeSender()
 	rs := []MessageRule{}
 	{
-		const savePath = "/dm-temp"
-		a := c.NewStorage(savePath)
-		r := NewDirectMessageWatcher(c.DataSourceScreenName, a, sender)
+		r := NewDirectMessageWatcher(c.DataSourceScreenName, sender)
 		rs = append(rs, r)
 	}
 	return rs
