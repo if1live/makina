@@ -90,12 +90,6 @@ func (c *Config) NewTweetRules() []TweetRule {
 		r := NewMediaArchiver(a, c.DataSourceScreenName, c.MediaArchiverPredefineUsers)
 		rs = append(rs, r)
 	}
-	{
-		const savePath = "/hitomi-temp"
-		a := c.NewStorage(savePath)
-		r := NewHitomiWatcher(c.DataSourceScreenName, a)
-		rs = append(rs, r)
-	}
 	return rs
 }
 func (c *Config) NewMessageRules() []MessageRule {
