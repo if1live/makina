@@ -39,6 +39,7 @@ func MakeTweetFileName(id string, now time.Time, ext string) string {
 	return strings.Join(tokens, "")
 }
 func MakeNormalFileName(filename string, now time.Time) string {
+	filename = strings.Replace(filename, ":orig", "", -1)
 	tokens := []string{
 		//MakePrefix(now),
 		filename,
@@ -73,7 +74,8 @@ func findURLFromVideo(media anaconda.EntityMedia) string {
 }
 
 func findURLFromPhoto(media anaconda.EntityMedia) string {
-	return media.Media_url
+	postfix := ":orig"
+	return media.Media_url + postfix
 }
 
 func findURLFromAnimatedGif(media anaconda.EntityMedia) string {
