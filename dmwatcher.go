@@ -263,14 +263,7 @@ func (c *TweetSaveCommand) execute(rawurl string, sender Sender) {
 		return
 	}
 
-	now := time.Now()
-	resp, err := c.storage.UploadMetadata(&t, "", now)
-	if err != nil {
-		raven.CaptureErrorAndWait(err, nil)
-		log.Panicf("dm tweet save fail! %s -> %s, [%s]", resp.ID, resp.FileName, err.Error())
-
-	}
-
+	c.storage.ArchiveTweet(&t, "")
 	sender.Send(fmt.Sprintf("dm save success %d", id))
 }
 
