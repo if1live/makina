@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"strings"
 
@@ -85,9 +86,14 @@ func (ar *MediaArchiver) FindCategory(dir, writerScreenName string) string {
 		s1 := strings.ToLower(user)
 		if s1 == name {
 			category = "user-" + user
-			break
+			return category
 		}
 	}
+
+	// 날짜를 붙여주면 검색하기 쉽겠지?
+	now := time.Now()
+	postfix := now.Format("date-2006-01-02")
+	category = dir + "/" + postfix
 
 	return category
 }
