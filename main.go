@@ -132,6 +132,13 @@ func mainStreaming(config *Config) {
 		default:
 			if x != nil {
 				log.Printf("unknown type(%T) : %v \n", x, x)
+			} else {
+				// 루프 돌면서 감시하는데
+				// nok-blocking으로 돌아가다보니
+				// 어디가에서 대기를 넣지 않으면
+				// cpu 100%를 찍는다
+				// streaming 쓰는곳 모두 대기 코드 넣기
+				time.Sleep(1 * time.Second)
 			}
 		}
 	}
@@ -148,6 +155,12 @@ func mainDirectMessageStreaming(config *Config) {
 		case anaconda.DirectMessage:
 			for _, h := range rs {
 				go h.OnDirectMessage(&tweet)
+			}
+		default:
+			if x != nil {
+				log.Printf("unknown type(%T) : %v \n", x, x)
+			} else {
+				time.Sleep(1 * time.Second)
 			}
 		}
 	}

@@ -5,8 +5,8 @@
 Description=makina
 
 [Service]
-ExecStart=/home/pi/service/makina/makina -log=makina.log
-WorkingDirectory=/home/pi/service/makina
+ExecStart=/home/irina/service/makina/makina -log=makina.log
+WorkingDirectory=/home/irina/service/makina
 Restart=always
 
 [Install]
