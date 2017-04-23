@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"net/http"
 	"os"
 	"path"
@@ -58,6 +59,13 @@ func main() {
 }
 
 func mainDevel(config *Config) {
+	api := config.NewDataSourceAuthConfig().CreateApi()
+	const tweetId = 835371925933260801
+	tweet, err := api.GetTweet(tweetId, nil)
+	if err != nil {
+		fmt.Printf("GetTweet returned error: %s", err.Error())
+	}
+	fmt.Println(tweet.Text)
 }
 
 func mainDefault(config *Config) {
@@ -133,12 +141,7 @@ func mainStreaming(config *Config) {
 			if x != nil {
 				log.Printf("unknown type(%T) : %v \n", x, x)
 			} else {
-				// 루프 돌면서 감시하는데
-				// nok-blocking으로 돌아가다보니
-				// 어디가에서 대기를 넣지 않으면
-				// cpu 100%를 찍는다
-				// streaming 쓰는곳 모두 대기 코드 넣기
-				time.Sleep(1 * time.Second)
+				sleepWhenIdle()
 			}
 		}
 	}
@@ -160,8 +163,17 @@ func mainDirectMessageStreaming(config *Config) {
 			if x != nil {
 				log.Printf("unknown type(%T) : %v \n", x, x)
 			} else {
-				time.Sleep(1 * time.Second)
+				sleepWhenIdle()
 			}
 		}
 	}
+}
+
+// 루프 돌면서 감시하는데
+// nok-blocking으로 돌아가다보니
+// 어디가에서 대기를 넣지 않으면
+// cpu 100%를 찍는다
+// streaming 쓰는곳 모두 대기 코드 넣기
+func sleepWhenIdle() {
+	time.Sleep(100 * time.Millisecond)
 }
